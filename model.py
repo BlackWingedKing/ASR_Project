@@ -45,7 +45,7 @@ class residual_block(nn.Module):
             self.downsample_layer = nn.Conv3d(in_channels=in_feats,out_channels=out_feats,kernel_size=[1,1,1],stride=stride)
     def forward(self,x):
         identity = x
-        out = self.conv1(x)
+        out = F.relu(self.conv1(x))
         out = self.conv2(out)
         if(downsample_conv==1):
             identity = self.downsample_layer(identity)
@@ -106,18 +106,18 @@ class AVNet(nn.Module):
         # x shape is assumed to be Bx3x125x224x224 
         # and y's shape is assumed to be B*2*1*1*n_samples
         # first the image part
-        x = self.im_conv1(x)
+        x = F.relu(self.im_conv1(x))
         x = self.im_pool1(x)
         x = self.im_res1(x)
         x= self.im_res2(x)
         # now extract from the audio
-        y = self.a_conv1(y)
+        y = F.relu(self.a_conv1(y))
         y = self.a_pool1(y)
         y = self.a_res1(y)
         y = self.a_res2(y)
         y = self.a_res3(y)
         y = self.a_pool2(y)
-        y = self.a_conv2(y)
+        y = F.relu(self.a_conv2(y))
         # now combine both of these variables
 
         shape = list(x.size())
@@ -125,7 +125,7 @@ class AVNet(nn.Module):
         combined = torch.cat([x,y_tiled],4)
         short = torch.cat([combined[:,:,:,:,:64],combined[:,:,:,:,-64:]],4)
 
-        combined = self.f_conv1(combined)
+        combined = F.relu(self.f_conv1(combined))
         combined = self.f_conv2(combined)
         combined = self.bn_f(combined+short)
         combined = self.relu_f(combined)
