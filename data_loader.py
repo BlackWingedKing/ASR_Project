@@ -36,12 +36,12 @@ class Resize(object):
         self.output_size = output_size
 
     def __call__(self, vid):
-        dim = vid.shape
         vid_resized = torch.zeros(self.output_size)
         # for i in range(dim[0]):
         #     vid_resized[i, :, :, :] = skimage.transform.resize(
         #         vid[i, :, :, :], (self.output_size[1], self.output_size[2], 3))
-        vid_list = list(map(lambda x: skimage.transform.resize(x,(self.output_size[1], self.output_size[2], 3)), vid))
+        vid_list = list(map(lambda x: skimage.transform.resize(
+            x, (self.output_size[1], self.output_size[2], 3)), vid))
         vid_resized = torch.FloatTensor(vid_list)
         return vid_resized
 
@@ -60,5 +60,14 @@ class RandomCrop(object):  # INCOMPLETE
             self.output_size = (output_size, output_size)
 
     def __call__(self, vid):
+        dim = vid.shape
+        new_dim = self.output_size
+        assert dim[0] > new_dim[0] and dim[1] > new_dim[1]
+
+        top = torch.randint(0, dim[0] - new_dim[0])
+        left = torch.randint(0, dim[1] - new_dim[1])
+
+        vid_list = list(map(lambda x: x[top:top+new_dim[0], left:left+new_dim[1]], vid))
+        crop_vid = torch.FloatTensor(vid_list)
 
         return crop_vid
