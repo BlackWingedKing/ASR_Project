@@ -166,10 +166,14 @@ class AVNet(nn.Module):
         print(logits.shape)
         logits = self.sigmoid(logits)
         print(logits.shape)
-        probs, idxs = logits.sort(1, True)
-        class_idx = idxs[:, 0]
-        print(self.cmm_weights.shape,self.cmm_weights[class_idx])
-        cam = torch.bmm(self.cmm_weights[class_idx].unsqueeze(1), combined)
+        # probs, idxs = logits.sort(1, True)
+        # class_idx = idxs[:, 0]
+        print(self.cmm_weights.shape,combined.shape)
+        cam = self.cmm_weights.unsqueeze(2).unsqueeze(3).unsqueeze(4)*combined
+        cam = torch.mean(cam,dim=2)
+        cam = torch.mean(cam,dim=1)
+        cam = cam.view(-1,7,7)
+        print(cam.shape)
         return logits,cam
 Net = AVNet()
 # print(Net.state_dict())
@@ -177,7 +181,7 @@ x = torch.randn(1,3,125,224,224)
 y = torch.randn(1,2,87588,1,1)
 
 a,b=Net(x,y)
-print(a.shape,b.shape)
+# print(a.shape,b.shape)
 
 # y=y.repeat([1,1,1,2,2])
 # z= nn.FractionalMaxPool3d([3,1,1],output_size=(2,1,1))
