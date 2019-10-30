@@ -79,7 +79,7 @@ class AVNet(nn.Module):
         self.a_pool2 = nn.Maxpool3d(kernel_size=[3,1,1],stride=[3,1,1])
         self.a_conv2 = nn.Conv3d(in_channels=256,out_channels=128,kernel_size=[3,1,1])
         # fusion layers
-        self.f_conv1 = nn.Conv3d(in_channels=,out_channels=512,kernel_size=[1,1,1])
+        self.f_conv1 = nn.Conv3d(in_channels=192,out_channels=512,kernel_size=[1,1,1])
         self.f_conv2 = nn.Conv3d(in_channels=512,out_channels=128,kernel_size=[1,1,1])
         self.bn_f = nn.BatchNorm3d(128)
         self.relu_f = nn.ReLu(inplace=True)
