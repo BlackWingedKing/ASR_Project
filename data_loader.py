@@ -46,7 +46,7 @@ class Resize(object):
         return vid_resized
 
 
-class RandomCrop(object):  # INCOMPLETE
+class RandomCrop(object):
     """Randomly crop out a patch from video of given size
 
     Args:
