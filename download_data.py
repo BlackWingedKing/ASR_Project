@@ -67,7 +67,7 @@ def download_yt_link(vid_num, link, start_time, end_time, fps, aud_sampling, pat
     # triming the video to specified start time and end time (according to audioset)
     inp = ffmpeg.input('data/temp/'+tmp+'.mp4',
                        ss=start_time, t=end_time-start_time, r=fps)
-    filename = path_vid+'vid_'+str(vid_num)+'.mp4'
+    filename = path_vid+'video_'+str(vid_num)+'.mp4'
     op_aud, err = ffmpeg.output(inp.audio, 'data/temp/'+tmp+'_aud.wav').run()
     resample_audio('data/temp/'+tmp+'_aud.wav', 'data/temp/'+tmp+'_aud_resampled.wav', aud_sampling)
     aud_resampled = ffmpeg.input('data/temp/'+tmp+'_aud_resampled.wav')
@@ -77,13 +77,13 @@ def download_yt_link(vid_num, link, start_time, end_time, fps, aud_sampling, pat
     start_time = round(2 + rng*3.8, 2)
     inp_unshift = ffmpeg.input(filename, ss=start_time, t=4.2)
     op_unshift, err = ffmpeg.output(inp_unshift,
-                                    path_unshift+'vid_'+str(vid_num)+'.mp4').run()
+                                    path_unshift+'video_'+str(vid_num)+'.mp4').run()
     # shifting audio
     trim_audio('data/temp/'+tmp+'_aud_resampled.wav', 'data/temp/'+tmp+'.wav', 5.8, 10)
     vid = inp_unshift.video
     aud = ffmpeg.input('data/temp/'+tmp+'.wav')
     op_shift, err = ffmpeg.output(vid, aud.audio,
-                                  path_shift+'vid_'+str(vid_num)+'.mp4').run()
+                                  path_shift+'video_'+str(vid_num)+'.mp4').run()
 
     # clean up
     tmp = 'data/temp/'+tmp
@@ -99,24 +99,33 @@ def download_video_parallel(yt_id, start_time, end_time, fps, aud_sampling, path
     Parallel(n_jobs=2, prefer="threads")(delayed(download_yt_link)(
         i+1, link[i], start_time[i], end_time[i], fps,
         aud_sampling, path_vid, path_shift, path_unshift, rng.rand()) for i in range(len(link)))
-    # for i in range(len(link)):
-    #     try:
-    #         # downloading 360p video from YouTube
-    #
-    #         vid_num += 1
-    #     except:
-    #         print("Connection Error")  # to handle exception
+
+
+def renumber_vid(path):
+    list_file = sorted(os.listdir(path))
+    num = 1
+    for f in list_file:
+        if f == '.DS_Store':
+            os.remove(path+f)
+            continue
+        if f[0:5] != 'video':
+            continue
+        os.rename(path+f, path+'vid_'+str(num)+'.mp4')
+        num += 1
 
 
 def main():
-    audioset_path = 'data/balanced_train_segments.csv'  # path to the list of YouTube videos
-    audioset = pd.read_csv(audioset_path, quotechar='"',
-                           skipinitialspace=True, skiprows=2)
-    num_videos = 4
-    rng = np.random.RandomState(seed=42)
-    download_video_parallel(audioset.iloc[0:num_videos, 0], audioset.iloc[0:num_videos, 1],
-                            audioset.iloc[0:num_videos, 2], 29.97, 22100, 'data/train/full_vid/',
-                            'data/train/shifted/', 'data/train/unshifted/', rng)
+    # audioset_path = 'data/balanced_train_segments.csv'  # path to the list of YouTube videos
+    # audioset = pd.read_csv(audioset_path, quotechar='"',
+    #                        skipinitialspace=True, skiprows=2)
+    # num_videos = 6
+    # rng = np.random.RandomState(seed=42)
+    # download_video_parallel(audioset.iloc[0:num_videos, 0], audioset.iloc[0:num_videos, 1],
+    #                         audioset.iloc[0:num_videos, 2], 29.97, 22100, 'data/train/full_vid/',
+    #                         'data/train/shifted/', 'data/train/unshifted/', rng)
+    renumber_vid('data/train/full_vid/')
+    renumber_vid('data/train/shifted/')
+    renumber_vid('data/train/unshifted/')
 
 
 if __name__ == '__main__':

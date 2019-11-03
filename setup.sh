@@ -1,8 +1,8 @@
 #!/bin/bash
 
-mkdir data
-mkdir data/train data/temp
-mkdir data/train/full_vid data/train/shifted data/train/unshifted
+mkdir -p data
+mkdir -p data/train data/temp
+mkdir -p data/train/full_vid data/train/shifted data/train/unshifted
 
 pip install -r requirements.txt
 
