@@ -115,14 +115,14 @@ def renumber_vid(path):
 
 
 def main():
-    # audioset_path = 'data/balanced_train_segments.csv'  # path to the list of YouTube videos
-    # audioset = pd.read_csv(audioset_path, quotechar='"',
-    #                        skipinitialspace=True, skiprows=2)
-    # num_videos = 6
-    # rng = np.random.RandomState(seed=42)
-    # download_video_parallel(audioset.iloc[0:num_videos, 0], audioset.iloc[0:num_videos, 1],
-    #                         audioset.iloc[0:num_videos, 2], 29.97, 22100, 'data/train/full_vid/',
-    #                         'data/train/shifted/', 'data/train/unshifted/', rng)
+    audioset_path = 'data/balanced_train_segments.csv'  # path to the list of YouTube videos
+    audioset = pd.read_csv(audioset_path, quotechar='"',
+                           skipinitialspace=True, skiprows=2)
+    num_videos = 6
+    rng = np.random.RandomState(seed=42)
+    download_video_parallel(audioset.iloc[0:num_videos, 0], audioset.iloc[0:num_videos, 1],
+                            audioset.iloc[0:num_videos, 2], 29.97, 22100, 'data/train/full_vid/',
+                            'data/train/shifted/', 'data/train/unshifted/', rng)
     renumber_vid('data/train/full_vid/')
     renumber_vid('data/train/shifted/')
     renumber_vid('data/train/unshifted/')
