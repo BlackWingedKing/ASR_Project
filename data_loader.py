@@ -2,6 +2,7 @@
 from torch.utils.data.dataset import Dataset
 import torch
 from torchvision import io
+import torchaudio
 import os
 import skimage
 
@@ -9,19 +10,29 @@ import skimage
 class DataLoaderTrain(Dataset):
     def __init__(self, path='data/train/', transform=None):
         self.path = path
-        self.list = os.listdir(self.path)
+        self.list = os.listdir(self.path+'full_vid/')
         self.transform = transform
 
     def __getitem__(self, index):
-        vid, aud, info = io.read_video(self.path+'vid_'+str(index)+'.mp4')
-        if len(aud.shape) > 1 and aud.shape[0] > 1:
-            aud = aud[0, :]
+        vid, aud_unshifted, info = io.read_video(self.path+'unshifted/vid_'+str(index)+'.mp4')
+        aud_shifted, info = torchaudio.load(self.path+'shifted/vid_'+str(index)+'.wav')
+
+        # normalising video to -1 and 1
+        vid = (2./255)*vid.double() - 1
+        # normalising audio
+        aud_shifted = normalize_sfs(aud_shifted)
+        aud_unshifted = normalize_sfs(aud_unshifted)
+
         if self.transforms is not None:
             vid = self.transform(vid)
-        return (vid, aud)
+        return (vid, aud_shifted, aud_unshifted)
 
     def __len__(self):
         return len(self.list)  # number of videos
+
+
+def normalize_sfs(sfs, scale=255.):
+    return torch.sign(sfs)*(torch.log(1 + scale*torch.abs(sfs)) / torch.log(1 + scale))
 
 
 class Resize(object):
