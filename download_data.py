@@ -88,16 +88,16 @@ def download_yt_link(vid_num, link, start_time, end_time, fps, aud_sampling, pat
 
 
 def download_video_parallel(yt_id, start_time, end_time, fps, aud_sampling, path_vid, path_shift,
-                            path_unshift, rng):
+                            path_unshift, rng, njobs):
     link = ["https://www.youtube.com/watch?v="+id for id in yt_id]
-    Parallel(n_jobs=2, prefer="threads")(delayed(download_yt_link)(
+    Parallel(n_jobs=njobs, prefer="threads")(delayed(download_yt_link)(
         i+1, link[i], start_time[i], end_time[i], fps,
         aud_sampling, path_vid, path_shift, path_unshift, rng.rand()) for i in range(len(link)))
 
 
-def renumber_vid(path):
+def renumber_vid(path,start_from):
     list_file = sorted(os.listdir(path))
-    num = 1
+    num = start_from
     for f in list_file:
         if f == '.DS_Store':
             os.remove(path+f)
@@ -113,14 +113,15 @@ def main():
     audioset_path = 'data/balanced_train_segments.csv'  # path to the list of YouTube videos
     audioset = pd.read_csv(audioset_path, quotechar='"',
                            skipinitialspace=True, skiprows=2)
-    num_videos = 2
+    num_videos = 200
+    start_num=200
     rng = np.random.RandomState(seed=42)
-    download_video_parallel(audioset.iloc[0:num_videos, 0], audioset.iloc[0:num_videos, 1],
-                            audioset.iloc[0:num_videos, 2], 29.97, 22100, 'data/train/full_vid/',
-                            'data/train/shifted/', 'data/train/unshifted/', rng)
-    renumber_vid('data/train/full_vid/')
-    renumber_vid('data/train/shifted/')
-    renumber_vid('data/train/unshifted/')
+    download_video_parallel(audioset.iloc[start_num:start_num+num_videos, 0], audioset.iloc[start_num:start_num+num_videos, 1],
+                            audioset.iloc[start_num:start_num+num_videos, 2], 29.97, 22100, 'data/train/full_vid/',
+                            'data/train/shifted/', 'data/train/unshifted/', rng, 15)
+    renumber_vid('data/train/full_vid/',start_from=186)
+    renumber_vid('data/train/shifted/',start_from=186)
+    renumber_vid('data/train/unshifted/',start_from=186)
 
 
 if __name__ == '__main__':
