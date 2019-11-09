@@ -1,7 +1,7 @@
 # reference:    https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 from torch.utils.data.dataset import Dataset
 import torch
-from torchvision import io
+from torchvision import io, transforms
 import torchaudio
 import os
 import skimage
@@ -44,7 +44,10 @@ class Resize(object):
 
     def __init__(self, output_size):
         assert isinstance(output_size, (int, tuple))
-        self.output_size = output_size
+        if isinstance(output_size, int):
+            self.output_size = (output_size, output_size)
+        else:
+            self.output_size = output_size
 
     def __call__(self, vid):
         vid_resized = torch.zeros(self.output_size)
@@ -69,6 +72,8 @@ class RandomCrop(object):
         assert isinstance(output_size, (int, tuple))
         if isinstance(output_size, int):
             self.output_size = (output_size, output_size)
+        else:
+            self.output_size = output_size
 
     def __call__(self, vid):
         dim = vid.shape

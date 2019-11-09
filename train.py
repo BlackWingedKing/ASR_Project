@@ -7,7 +7,8 @@ from __future__ import print_function
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.models as models
+# import torchvision.models as models
+from torchvision import transforms, models
 import torch.optim as optim
 # np, images
 import numpy as np
@@ -18,7 +19,7 @@ import pandas as pd
 import glob
 import time
 from model_fused import AVNet, VideoNet, AudioNet
-from data_loader import DataLoader
+from data_loader import DataLoader, Rescale, RandomCrop
 import utils
 # parameters and hyper params
 batch_size = 1
@@ -69,12 +70,13 @@ def main():
     # log the list for reference
     utils.log_list(train_list, 'data/train_list.txt')
     utils.log_list(val_list, 'data/val_list.txt')
-    # uncomment following to read previous list
+    ## uncomment following to read previous list
     # train_list = utils.read_list('data/train_list.txt')
     # val_list = utils.read_list('data/val_list.txt')
+    composed = transforms.Compose([RandomCrop(224), Rescale(256)])
+    train_loader = DataLoader(train_list, transform=composed)
+    val_loader = DataLoader(val_list, transform=composed)
 
-    train_loader = DataLoader(train_list)
-    val_loader = DataLoader(val_list)
     train(vmodel, amodel, avmodel, optimiser, nepochs, train_loader)
 
 
