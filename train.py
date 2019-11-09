@@ -9,7 +9,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 import torch.optim as optim
-from torch.utils.data import random_split
 # np, images
 import numpy as np
 # import cv2
@@ -20,6 +19,7 @@ import glob
 import time
 from model_fused import AVNet, VideoNet, AudioNet
 from data_loader import DataLoader
+import utils
 # parameters and hyper params
 batch_size = 1
 nepochs = 1
@@ -33,16 +33,6 @@ device = torch.device("cuda" if use_cuda else "cpu")
 kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
 ce_loss = nn.CrossEntropyLoss()
-
-
-def split_data(list_vid, train_frac, val_frac):
-    len_data = len(list_vid)
-    train_size = round(len_data*train_frac)
-    val_size = round(len_data*val_frac)
-    train_vid, val_vid = random_split(list_vid, [train_size, val_size])
-    train_list = list(train_vid)
-    val_list = list(val_vid)
-    return train_list, val_list
 
 
 def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader):
@@ -74,8 +64,15 @@ def main():
     avmodel = AVNet().to(device)
     params = list(vmodel.parameters())+list(amodel.parameters())+list(avmodel.parameters())
     optimiser = optim.Adam(params, lr=LR)
-    list_vid = os.listdir('data/train/full_vid')
-    train_list, val_list = split_data(list_vid, 0.8, 0.2)
+    list_vid = os.listdir('data/train/full_vid')  # ensure no extra files like .DS_Store are present
+    train_list, val_list = utils.split_data(list_vid, 0.8, 0.2)
+    # log the list for reference
+    utils.log_list(train_list, 'data/train_list.txt')
+    utils.log_list(val_list, 'data/val_list.txt')
+    # uncomment following to read previous list
+    # train_list = utils.read_list('data/train_list.txt')
+    # val_list = utils.read_list('data/val_list.txt')
+
     train_loader = DataLoader(train_list)
     val_loader = DataLoader(val_list)
     train(vmodel, amodel, avmodel, optimiser, nepochs, train_loader)
