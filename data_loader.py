@@ -7,10 +7,10 @@ import os
 import skimage
 
 
-class DataLoaderTrain(Dataset):
-    def __init__(self, path='data/train/', transform=None):
+class DataLoader(Dataset):
+    def __init__(self, train_list, path='data/train/', transform=None):
         self.path = path
-        self.list = os.listdir(self.path+'full_vid/')
+        self.list = train_list
         self.transform = transform
 
     def __getitem__(self, index):
