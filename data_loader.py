@@ -82,12 +82,12 @@ class RandomCrop(object):
     def __call__(self, vid):
         dim = vid.shape
         new_dim = self.output_size
-        assert dim[0] > new_dim[0] and dim[1] > new_dim[1]
+        assert dim[1] > new_dim[0] and dim[2] > new_dim[1]
 
-        top = torch.randint(0, dim[0] - new_dim[0])
-        left = torch.randint(0, dim[1] - new_dim[1])
+        top = torch.randint(dim[1] - new_dim[0],size=(1,1))[0,0]
+        left = torch.randint(dim[2] - new_dim[1],size=(1,1))[0,0]
 
-        vid_list = list(map(lambda x: x[top:top+new_dim[0], left:left+new_dim[1]], vid))
+        vid_list = list(map(lambda x: x[top:top+new_dim[0], left:left+new_dim[1],:].reshape(1,new_dim[0],new_dim[1],dim[3]), vid))
         crop_vid = torch.FloatTensor(vid_list)
 
         return crop_vid
