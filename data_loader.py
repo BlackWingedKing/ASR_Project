@@ -8,7 +8,7 @@ import os
 import skimage
 import skvideo.io
 
-class DataLoader(Dataset):
+class AVDataset(Dataset):
     def __init__(self, train_list, path='data/train/', transform=None):
         self.path = path
         self.list = train_list

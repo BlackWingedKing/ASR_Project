@@ -19,11 +19,12 @@ import pandas as pd
 import glob
 import time
 from model_fused import AVNet, VideoNet, AudioNet
-from data_loader import DataLoader, Resize, RandomCrop
+from data_loader import AVDataset, Resize, RandomCrop
 import utils
 
 # parameters and hyper params
-batch_size = 1
+batch_size = 2
+test_batch_size = 2
 nepochs = 100
 LR = 0.001
 
@@ -52,10 +53,10 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         i = 0
         print(len(train_loader))
         # print(list(train_loader))
-        for i in range (1,len(train_loader)):
+        for vid, aus, au in enumerate(train_loader):
             i+=1
-            vid, aus, au = train_loader[i]
             print('in the iteration loop')
+            print(vid.shape, aus.shape, au.shape)
             vid = vid.to(device)
             aus = aus.to(device)
             au = au.to(device)
@@ -124,9 +125,9 @@ def main():
     # uncomment following to read previous list
     # train_list = utils.read_list('data/train_list.txt')
     # val_list = utils.read_list('data/val_list.txt')
-    composed = transforms.Compose([RandomCrop(224), Resize(256)])
-    train_loader = DataLoader(train_list, transform=composed)
-    val_loader = DataLoader(val_list, transform=composed)
+    composed = transforms.Compose([RandomCrop(256), Resize(224)])
+    train_loader = torch.utils.data.DataLoader(AVDataset(train_list, transform=composed), batch_size=batch_size, shuffle=True, num_workers=4)
+    val_loader = torch.utils.data.DataLoader(AVDataset(val_list, transform=composed), batch_size=test_batch_size,shuffle=True, num_workers=4)
 
     train(vmodel, amodel, avmodel, optimiser, nepochs, train_loader, val_loader)
 
