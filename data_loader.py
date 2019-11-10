@@ -9,7 +9,7 @@ import skimage
 
 
 class DataLoader(Dataset):
-    def __init__(self, train_list, path='data/train/', transform=None):
+    def __init__(self, train_list, path='../data/train/', transform=None):
         self.path = path
         self.list = train_list
         self.transform = transform
