@@ -61,7 +61,7 @@ class Resize(object):
         #     vid_resized[i, :, :, :] = skimage.transform.resize(
         #         vid[i, :, :, :], (self.output_size[1], self.output_size[2], 3))
         vid_list = list(map(lambda x: skimage.transform.resize(
-            x, (self.output_size[1], self.output_size[2], 3)), vid))
+            x.numpy(), (self.output_size[0], self.output_size[1], 3)), vid))
         vid_resized = torch.FloatTensor(vid_list)
         return vid_resized
 
