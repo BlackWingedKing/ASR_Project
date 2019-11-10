@@ -45,7 +45,6 @@ class residual_block(nn.Module):
         out = self.relu(out)
         return out 
 
-
 class AVNet(nn.Module):
     def __init__(self):
         super(AVNet, self).__init__()
