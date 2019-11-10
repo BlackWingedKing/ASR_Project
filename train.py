@@ -94,8 +94,8 @@ def val(vmodel, amodel, avmodel, val_loader):
     avgloss = 0.0
     for batch_id, (vid, aus, au) in enumerate(val_loader):
         vid = vid.to(device)
-        aus = aus[0:87588].to(device)
-        au = au[0:87588].to(device)
+        aus = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+        au = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
         # vfeat = vmodel(vid)
         afeat = amodel(au)
         asfeat = amodel(aus)

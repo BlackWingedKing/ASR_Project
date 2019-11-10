@@ -25,7 +25,7 @@ class AVDataset(Dataset):
         # normalising video to -1 and 1
         vid = (2./255)*vid.double() - 1
         # normalising audio
-        aud_shifted = normalize_sfs(torch.FloatTensor(aud_shifted))
+        aud_shifted = normalize_sfs(aud_shifted)
         aud_unshifted = normalize_sfs(aud_unshifted)
 
         # (B, C, T, H, W)
@@ -33,7 +33,7 @@ class AVDataset(Dataset):
             vid = self.transform(vid)
 
         vid = vid.permute(3,0,1,2) # since skvideo reads (T,H,W,C) and our model needs
-        return (vid, aud_shifted[:87588], aud_unshifted[:87588])
+        return (vid, aud_shifted[:,:87588], aud_unshifted[:,:87588])
 
     def __len__(self):
         return len(self.list)  # number of videos
