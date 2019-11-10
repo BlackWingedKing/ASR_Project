@@ -19,7 +19,7 @@ import pandas as pd
 import glob
 import time
 from model_fused import AVNet, VideoNet, AudioNet
-from data_loader import DataLoader, Rescale, RandomCrop
+from data_loader import DataLoader, Resize, RandomCrop
 import utils
 # parameters and hyper params
 batch_size = 1
@@ -73,7 +73,7 @@ def main():
     ## uncomment following to read previous list
     # train_list = utils.read_list('data/train_list.txt')
     # val_list = utils.read_list('data/val_list.txt')
-    composed = transforms.Compose([RandomCrop(224), Rescale(256)])
+    composed = transforms.Compose([RandomCrop(224), Resize(256)])
     train_loader = DataLoader(train_list, transform=composed)
     val_loader = DataLoader(val_list, transform=composed)
 
