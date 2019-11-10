@@ -35,8 +35,7 @@ torch.manual_seed(1)
 device = torch.device("cuda" if use_cuda else "cpu")
 kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-ce_loss = nn.CrossEntropyLoss()
-
+bce_loss = nn.BCELoss()
 
 def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
     # train function
@@ -56,20 +55,20 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             print('in the iteration loop')
             print(vid.shape, aus.shape, au.shape)
             vid = vid.to(device)
-            aus1 = aus[0:87588].to(device)
-            au1 = au[0:87588].to(device)
-            # vfeat = vmodel(vid)
-            print('above the call function')
+            aus1 = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            au1 = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            vfeat = vmodel(vid)
+            # print('above the call function')
             afeat = amodel(au1)
             asfeat = amodel(aus1)
             p, _ = avmodel(vfeat, afeat)
             ps, _ = avmodel(vfeat, asfeat)
-            gt = torch.ones_like(p).to(device)
+            gt = torch.ones_like(p).long().to(device)
             # loss = -1*torch.mean(torch.log(p) + torch.log(1-ps))
-            loss = torch.mean(ce_loss(p, gt) + ce_loss((1-ps), gt))
+            loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
             loss.backward()
             trainloss+=loss.item()
-        print('completed', i, 'iterations')
+            print('completed', i,'th', 'iteration')
         trainloss/=len(train_loader)
         valoss = val(vmodel, amodel, avmodel, val_loader)
         loss_list.append(trainloss)
