@@ -21,7 +21,10 @@ class AVDataset(Dataset):
         vid = vid[:125,:,:,:]
         aud_unshifted, info = torchaudio.load(self.path+'unshifted/' + self.list[index][:-4]+'.wav')
         aud_shifted, info = torchaudio.load(self.path+'shifted/' + self.list[index][:-4]+'.wav')
-        # print(info)
+
+        if aud_shifted.shape[0]<2:
+            aud_shifted = torch.cat((aud_shifted,aud_shifted),dim=0)
+            aud_unshifted = torch.cat((aud_unshifted,aud_unshifted),dim=0)
         # normalising video to -1 and 1
         vid = (2./255)*vid.double() - 1
         # normalising audio

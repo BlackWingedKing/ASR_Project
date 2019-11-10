@@ -23,7 +23,7 @@ from data_loader import AVDataset, Resize, RandomCrop
 import utils
 
 # parameters and hyper params
-batch_size = 2
+batch_size = 1
 test_batch_size = 2
 nepochs = 100
 LR = 0.001
@@ -58,12 +58,11 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             aus1 = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
             au1 = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
             vfeat = vmodel(vid)
-            # print('above the call function')
             afeat = amodel(au1)
             asfeat = amodel(aus1)
             p, _ = avmodel(vfeat, afeat)
             ps, _ = avmodel(vfeat, asfeat)
-            gt = torch.ones_like(p).long().to(device)
+            gt = torch.ones_like(p).to(device)
             # loss = -1*torch.mean(torch.log(p) + torch.log(1-ps))
             loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
             loss.backward()
@@ -91,21 +90,21 @@ def val(vmodel, amodel, avmodel, val_loader):
     amodel.eval()
     avmodel.eval()
     avgloss = 0.0
-    for batch_id, (vid, aus, au) in enumerate(val_loader):
-        vid = vid.to(device)
-        aus = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
-        au = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
-        # vfeat = vmodel(vid)
-        afeat = amodel(au)
-        asfeat = amodel(aus)
-        p, _ = avmodel(vfeat, afeat)
-        ps, _ = avmodel(vfeat, asfeat)
-        gt = torch.ones_like(p).to(device)
-        # loss = torch.mean(torch.log(p) + torch.log(1-ps))
-        loss = torch.mean(ce_loss(p, gt) + ce_loss((1-ps), gt))
-        loss.backward()
-        avgloss+= loss.item()
-    return avgloss
+    with torch.no_grad():
+        for batch_id, (vid, aus, au) in enumerate(val_loader):
+            vid = vid.to(device)
+            aus = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            au = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            vfeat = vmodel(vid)
+            afeat = amodel(au)
+            asfeat = amodel(aus)
+            p, _ = avmodel(vfeat, afeat)
+            ps, _ = avmodel(vfeat, asfeat)
+            gt = torch.ones_like(p).to(device)
+            # loss = torch.mean(torch.log(p) + torch.log(1-ps))
+            loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
+            avgloss+= loss.item()
+        return avgloss
 
 
 def main():
