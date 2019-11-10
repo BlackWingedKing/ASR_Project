@@ -1,21 +1,23 @@
 # reference:    https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 from torch.utils.data.dataset import Dataset
 import torch
-from torchvision import io, transforms
+from torchvision transforms
 import torchaudio
 import os
 # from skimage import io
 import skimage
-
+import skvideo.io
 
 class DataLoader(Dataset):
-    def __init__(self, train_list, path='../data/train/', transform=None):
+    def __init__(self, train_list, path='data/train/', transform=None):
         self.path = path
         self.list = train_list
         self.transform = transform
 
     def __getitem__(self, index):
-        vid, aud_unshifted, info = io.read_video(self.path+'unshifted/vid_'+str(index)+'.mp4')
+        # vid, aud_unshifted, info = io.read_video(self.path+'snippet/vid_'+str(index)+'.mp4')
+        vid = torch.Tensor(skvideo.io.vread(self.path+'snippet/vid_'+str(index)+'.mp4'))
+        aud_unshifted, info = torchaudio.load(self.path+'unshifted/vid_'+str(index)+'.wav')
         aud_shifted, info = torchaudio.load(self.path+'shifted/vid_'+str(index)+'.wav')
 
         # normalising video to -1 and 1
@@ -24,6 +26,8 @@ class DataLoader(Dataset):
         aud_shifted = normalize_sfs(aud_shifted)
         aud_unshifted = normalize_sfs(aud_unshifted)
 
+        vid = vid.permute(3,0,1,2) # since skvideo reads (T,H,W,C) and our model needs
+        # (B, C, T, H, W)
         if self.transforms is not None:
             vid = self.transform(vid)
         return (vid, aud_shifted, aud_unshifted)
@@ -34,7 +38,6 @@ class DataLoader(Dataset):
 
 def normalize_sfs(sfs, scale=255.):
     return torch.sign(sfs)*(torch.log(1 + scale*torch.abs(sfs)) / torch.log(1 + scale))
-
 
 class Resize(object):
     """Resize the video to a given size.

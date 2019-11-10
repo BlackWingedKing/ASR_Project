@@ -36,12 +36,54 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 ce_loss = nn.CrossEntropyLoss()
 
 
-def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader):
+def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
     # train function
     # load data from the dataloader
     loss_list = []
+    val_list = []
     it = 0
-    for vid, aus, au in enumerate(train_loader):
+    prev_loss = 10000
+    for e in range(0,epochs):
+        vmodel.train()
+        amodel.train()
+        avmodel.train()
+        trainloss = 0.0
+        for vid, aus, au in enumerate(train_loader):
+            vid = vid.to(device)
+            aus = aus.to(device)
+            au = au.to(device)
+            vfeat = vmodel(vid)
+            afeat = amodel(au)
+            asfeat = amodel(aus)
+            p, _ = avmodel(vfeat, afeat)
+            ps, _ = avmodel(vfeat, asfeat)
+            gt = torch.ones_like(p).to(device)
+            # loss = -1*torch.mean(torch.log(p) + torch.log(1-ps))
+            loss = torch.mean(ce_loss(p, gt) + ce_loss((1-ps), gt))
+            loss.backward()
+            trainloss+=loss.item()
+        trainloss/=len(train_loader)
+        valoss = val(vmodel, amodel, avmodel, val_loader)
+        loss_list.append(trainloss)
+        val_list.append(valoss)
+
+        print('epoch: ', e, 'iteration: ', it, 'train loss: ', trainloss, 'val loss: ', valoss)
+        if(prev_loss >= trainloss):
+            print('saving the model ')
+            torch.save(amodel.state_dict(), 'amodel.pt')
+            torch.save(vmodel.state_dict(), 'vmodel.pt')
+            torch.save(avmodel.state_dict(), 'avmodel.pt')
+            prev_loss = trainloss
+            print('model saved')
+    dft = {'train_loss': loss_list, 'val loss': val_list}
+    dft.to_hdf('log.h5', key='data')
+
+def val(vmodel, amodel, avmodel, val_loader):
+    vmodel.eval()
+    amodel.eval()
+    avmodel.eval()
+    avgloss = 0.0
+    for vid, aus, au in enumerate(val_loader):
         vid = vid.to(device)
         aus = aus.to(device)
         au = au.to(device)
@@ -54,8 +96,8 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader):
         # loss = torch.mean(torch.log(p) + torch.log(1-ps))
         loss = torch.mean(ce_loss(p, gt) + ce_loss((1-ps), gt))
         loss.backward()
-        loss_list.append(loss.item())
-        print('training ', 'iteration: ', it, 'avg loss: ', loss.item())
+        avgloss+= loss.item()
+    return avgloss
 
 
 def main():
@@ -70,14 +112,14 @@ def main():
     # log the list for reference
     utils.log_list(train_list, 'data/train_list.txt')
     utils.log_list(val_list, 'data/val_list.txt')
-    ## uncomment following to read previous list
+    # uncomment following to read previous list
     # train_list = utils.read_list('data/train_list.txt')
     # val_list = utils.read_list('data/val_list.txt')
     composed = transforms.Compose([RandomCrop(224), Resize(256)])
     train_loader = DataLoader(train_list, transform=composed)
     val_loader = DataLoader(val_list, transform=composed)
 
-    train(vmodel, amodel, avmodel, optimiser, nepochs, train_loader)
+    train(vmodel, amodel, avmodel, optimiser, nepochs, train_loader, val_loader)
 
 
 if __name__ == '__main__':

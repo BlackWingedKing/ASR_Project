@@ -117,13 +117,14 @@ def main():
     audioset_path = 'data/balanced_train_segments.csv'  # path to the list of YouTube videos
     audioset = pd.read_csv(audioset_path, quotechar='"',
                            skipinitialspace=True, skiprows=2)
-    num_videos = 2
+    num_videos = 500
     start_num = 0
+    njobs=18
     start_from = len(os.listdir('data/train/full_vid/'))+1
     rng = np.random.RandomState(seed=42)
     download_video_parallel(audioset.iloc[start_num:start_num+num_videos, 0], audioset.iloc[start_num:start_num+num_videos, 1],
                             audioset.iloc[start_num:start_num+num_videos, 2], 29.97, 22100, 'data/train/full_vid/','data/train/snippet/',
-                            'data/train/shifted/', 'data/train/unshifted/', rng, 2)
+                            'data/train/shifted/', 'data/train/unshifted/', rng, njobs)
 
     renumber_vid('data/train/full_vid/',start_from=start_from)
     renumber_vid('data/train/snippet/',start_from=start_from)
