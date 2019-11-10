@@ -18,6 +18,9 @@ import numpy as np
 import pandas as pd
 import glob
 import time
+from pprint import pprint
+import tensorflow as tf
+import os
 
 class residual_block(nn.Module):
     def __init__(self,in_feats,out_feats,kernel,padding,stride=1):
@@ -103,7 +106,132 @@ class AudioNet(nn.Module):
         print(y.shape)
         return y
 
+class AVNet(nn.Module):
+    def __init__(self):
+        super(AVNet, self).__init__()
+        # fusion layers
+        self.f_conv1 = nn.Conv3d(in_channels=192,out_channels=512,kernel_size=[1,1,1])
+        self.f_conv2 = nn.Conv3d(in_channels=512,out_channels=128,kernel_size=[1,1,1])
+        self.bn_f = nn.BatchNorm3d(128)
+        self.relu_f = nn.ReLU(inplace=True)
+        
+        self.c_res1 = residual_block(128,128,[3,3,3],(1,1,1),1)
+        self.c_res2 = residual_block(128,128,[3,3,3],(1,1,1),1)
+        
+        self.c_res3 = residual_block(128,256,[3,3,3],(1,1,1),[2,2,2])
+        self.c_res4 = residual_block(256,256,[3,3,3],(1,1,1),1)
+        
+        self.c_res5 = residual_block(256,512,[3,3,3],(1,1,1),[1,2,2])
+        self.c_res6 = residual_block(512,512,[3,3,3],(1,1,1),1)
+        
+        self.avgpool = nn.AvgPool3d([16,7,7])
+        self.f_fcn = nn.Linear(512,1)
+        self.cmm_weights = self.f_fcn.weight
+        # activations and fc layers
+        self.sigmoid = nn.Sigmoid()
+        self.relu = nn.ReLU()
+        self.logsigmoid = nn.LogSigmoid()
+
+    def forward(self, x, y):        
+        # now combine both x, y
+        shape = list(x.size())
+        y_tiled = y.repeat([1,1,1,shape[3],shape[4]])
+        print(y_tiled.shape)
+        combined = torch.cat([x,y_tiled],1)
+        print(combined.shape)
+        short = torch.cat([combined[:,:64,:,:,:],combined[:,-64:,:,:,:]],1)
+        print(short.shape)
+        combined = F.relu(self.f_conv1(combined))
+        print(combined.shape)
+        combined = self.f_conv2(combined)
+        print(combined.shape)
+        combined = self.bn_f(combined+short)
+        print(combined.shape)
+        combined = self.relu_f(combined)
+        print(combined.shape)
+
+        combined = self.c_res1(combined)
+        print(combined.shape)
+        combined = self.c_res2(combined)
+        print(combined.shape)
+        combined = self.c_res3(combined)
+        print(combined.shape)
+        combined = self.c_res4(combined)
+        print(combined.shape)
+        combined = self.c_res5(combined)
+        print(combined.shape)
+        combined = self.c_res6(combined)
+        print(combined.shape)
+
+        gap = self.avgpool(combined)
+        print(gap.shape)
+        logits = self.f_fcn(gap[:,:,0,0,0])
+        print(logits.shape)
+        logits = self.sigmoid(logits)
+        print(logits.shape)
+        # probs, idxs = logits.sort(1, True)
+        # class_idx = idxs[:, 0]
+        print(self.cmm_weights.shape,combined.shape)
+        cam = self.cmm_weights.unsqueeze(2).unsqueeze(3).unsqueeze(4)*combined
+        cam = torch.mean(cam,dim=2)
+        cam = torch.mean(cam,dim=1)
+        cam = cam.view(-1,7,7)
+        print(cam.shape)
+        return logits,cam
+
+def calprod(a):
+    s=1
+    for i in a:
+        s*=i
+    return s
 # code for testing
 Vmodel = VideoNet()
 Amodel = AudioNet()
-print(Vmodel.state_dict())
+AVmodel = AVNet()
+adict = Amodel.state_dict()
+vdict = Vmodel.state_dict()
+avdict = AVmodel.state_dict()
+akeys = adict.keys()
+vkeys = vdict.keys()
+avkeys = avdict.keys()
+ashapes = []
+vshapes = []
+avshapes = []
+
+for i in akeys:
+    x = adict[i].shape
+    ashapes.append(calprod(x))
+
+for i in vkeys:
+    x = vdict[i].shape
+    vshapes.append(calprod(x))
+
+for i in avkeys:
+    x = avdict[i].shape
+    avshapes.append(calprod(x))
+
+# akeys, ashapes, vkeys, vshapes are in sync
+
+tf_path = os.path.abspath('/home/ritesh/Desktop/multisensory/results/nets/shift/net.tf-650000')  # Path to our TensorFlow checkpoint
+tf_vars = tf.train.list_variables(tf_path)
+
+# pprint(tf_vars[0:5])
+# print(tf_vars)
+tfkeys = []
+tfshapes = []
+
+for i in tf_vars:
+    tfkeys.append(i[0])
+    tfshapes.append(calprod(i[1]))
+print(len(tfshapes), len(ashapes), len(vshapes), len(avshapes))
+
+stfshapes, stfkeys = zip(*sorted(zip(tfshapes, tfkeys)))
+sashapes, sakeys = zip(*sorted(zip(ashapes, akeys)))
+svshapes, svkeys = zip(*sorted(zip(vshapes, vkeys)))
+savshapes, savkeys = zip(*sorted(zip(avshapes, avkeys)))
+
+ptkeys = akeys + vkeys + avkeys
+ptshapes = ashapes + vshapes + avshapes
+sptshapes, sptkeys = zip(*sorted(zip(ptshapes, ptkeys)))
+
+print(len(list(set(list(sptshapes)))), len(list(set(list(stfshapes)))))
