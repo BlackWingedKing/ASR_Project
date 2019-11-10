@@ -164,6 +164,7 @@ class AudioNet(nn.Module):
 
     def forward(self, y):
         # now extract from the audio
+        print('in audio net and ', y.shape)
         y = F.relu(self.bn1(self.a_conv1(y)))
         print(y.shape)
         y = self.a_pool1(y)
