@@ -21,9 +21,10 @@ import time
 from model_fused import AVNet, VideoNet, AudioNet
 from data_loader import DataLoader, Resize, RandomCrop
 import utils
+
 # parameters and hyper params
 batch_size = 1
-nepochs = 1
+nepochs = 100
 LR = 0.001
 
 #gpu settings
@@ -48,7 +49,11 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         amodel.train()
         avmodel.train()
         trainloss = 0.0
+        i = 0
+        print(len(train_loader))
+        # print(list(train_loader))
         for vid, aus, au in enumerate(train_loader):
+            i+=1
             vid = vid.to(device)
             aus = aus.to(device)
             au = au.to(device)
@@ -62,20 +67,22 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             loss = torch.mean(ce_loss(p, gt) + ce_loss((1-ps), gt))
             loss.backward()
             trainloss+=loss.item()
+        print('completed', i, 'iterations')
         trainloss/=len(train_loader)
         valoss = val(vmodel, amodel, avmodel, val_loader)
         loss_list.append(trainloss)
         val_list.append(valoss)
 
         print('epoch: ', e, 'iteration: ', it, 'train loss: ', trainloss, 'val loss: ', valoss)
-        if(prev_loss >= trainloss):
-            print('saving the model ')
-            torch.save(amodel.state_dict(), 'amodel.pt')
-            torch.save(vmodel.state_dict(), 'vmodel.pt')
-            torch.save(avmodel.state_dict(), 'avmodel.pt')
-            prev_loss = trainloss
-            print('model saved')
-    dft = {'train_loss': loss_list, 'val loss': val_list}
+        # if(prev_loss >= trainloss):
+        #     print('saving the model ')
+        #     torch.save(amodel.state_dict(), 'amodel.pt')
+        #     torch.save(vmodel.state_dict(), 'vmodel.pt')
+        #     torch.save(avmodel.state_dict(), 'avmodel.pt')
+        #     prev_loss = trainloss
+        #     print('model saved')
+    dicty = {'train_loss': loss_list, 'val loss': val_list}
+    dft = pd.DataFrame(dicty)
     dft.to_hdf('log.h5', key='data')
 
 def val(vmodel, amodel, avmodel, val_loader):
