@@ -56,8 +56,8 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             print('in the iteration loop')
             print(vid.shape, aus.shape, au.shape)
             vid = vid.to(device)
-            aus = aus.to(device)
-            au = au.to(device)
+            aus = aus[0:87588].to(device)
+            au = au[0:87588].to(device)
             vfeat = vmodel(vid)
             afeat = amodel(au)
             asfeat = amodel(aus)
@@ -93,9 +93,9 @@ def val(vmodel, amodel, avmodel, val_loader):
     avgloss = 0.0
     for batch_id, (vid, aus, au) in enumerate(val_loader):
         vid = vid.to(device)
-        aus = aus.to(device)
-        au = au.to(device)
-        vfeat = vmodel(vid)
+        aus = aus[0:87588].to(device)
+        au = au[0:87588].to(device)
+        # vfeat = vmodel(vid)
         afeat = amodel(au)
         asfeat = amodel(aus)
         p, _ = avmodel(vfeat, afeat)

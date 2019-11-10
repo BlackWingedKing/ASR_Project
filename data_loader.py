@@ -21,7 +21,7 @@ class AVDataset(Dataset):
         vid = vid[:125,:,:,:]
         aud_unshifted, info = torchaudio.load(self.path+'unshifted/' + self.list[index][:-4]+'.wav')
         aud_shifted, info = torchaudio.load(self.path+'shifted/' + self.list[index][:-4]+'.wav')
-
+        # print(info)
         # normalising video to -1 and 1
         vid = (2./255)*vid.double() - 1
         # normalising audio
@@ -85,7 +85,7 @@ class RandomCrop(object):
     def __call__(self, vid):
         dim = vid.shape
         new_dim = self.output_size
-        print(dim,new_dim)
+        # print(dim,new_dim)
         assert dim[1] > new_dim[0] and dim[2] > new_dim[1]
 
         top = torch.randint(dim[1] - new_dim[0],size=(1,1))[0,0]
