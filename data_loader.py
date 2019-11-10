@@ -1,9 +1,10 @@
 # reference:    https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 from torch.utils.data.dataset import Dataset
 import torch
-from torchvision import io, transforms
+from torchvision import transforms
 import torchaudio
 import os
+from skimage import io
 import skimage
 
 
