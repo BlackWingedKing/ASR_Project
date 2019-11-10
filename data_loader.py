@@ -27,10 +27,11 @@ class DataLoader(Dataset):
         aud_shifted = normalize_sfs(torch.FloatTensor(aud_shifted))
         aud_unshifted = normalize_sfs(aud_unshifted)
 
-        vid = vid.permute(3,0,1,2) # since skvideo reads (T,H,W,C) and our model needs
         # (B, C, T, H, W)
         if self.transform is not None:
             vid = self.transform(vid)
+
+        vid = vid.permute(3,0,1,2) # since skvideo reads (T,H,W,C) and our model needs
         return (vid, aud_shifted, aud_unshifted)
 
     def __len__(self):
@@ -89,6 +90,6 @@ class RandomCrop(object):
         left = torch.randint(dim[2] - new_dim[1],size=(1,1))[0,0]
 
         vid_list = list(map(lambda x: x[top:top+new_dim[0], left:left+new_dim[1],:].reshape(1,new_dim[0],new_dim[1],dim[3]), vid))
-        crop_vid = torch.FloatTensor(vid_list)
+        crop_vid = torch.cat(vid_list,dim=0)
 
         return crop_vid
