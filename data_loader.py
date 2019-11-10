@@ -18,6 +18,7 @@ class AVDataset(Dataset):
         # vid, aud_unshifted, info = io.read_video(self.path+'snippet/vid_'+str(index)+'.mp4')
 
         vid = torch.Tensor(skvideo.io.vread(self.path+'snippet/' + self.list[index]))
+        vid = vid[:125,:,:,:]
         aud_unshifted, info = torchaudio.load(self.path+'unshifted/' + self.list[index][:-4]+'.wav')
         aud_shifted, info = torchaudio.load(self.path+'shifted/' + self.list[index][:-4]+'.wav')
 
@@ -84,6 +85,7 @@ class RandomCrop(object):
     def __call__(self, vid):
         dim = vid.shape
         new_dim = self.output_size
+        print(dim,new_dim)
         assert dim[1] > new_dim[0] and dim[2] > new_dim[1]
 
         top = torch.randint(dim[1] - new_dim[0],size=(1,1))[0,0]
