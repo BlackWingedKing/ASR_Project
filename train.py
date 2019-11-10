@@ -51,9 +51,7 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         avmodel.train()
         trainloss = 0.0
         i = 0
-        print(len(train_loader))
-        # print(list(train_loader))
-        for vid, aus, au in enumerate(train_loader):
+        for batch_id, (vid, aus, au) in enumerate(train_loader):
             i+=1
             print('in the iteration loop')
             print(vid.shape, aus.shape, au.shape)
@@ -93,7 +91,7 @@ def val(vmodel, amodel, avmodel, val_loader):
     amodel.eval()
     avmodel.eval()
     avgloss = 0.0
-    for vid, aus, au in enumerate(val_loader):
+    for batch_id, (vid, aus, au) in enumerate(val_loader):
         vid = vid.to(device)
         aus = aus.to(device)
         au = au.to(device)
@@ -125,7 +123,7 @@ def main():
     # uncomment following to read previous list
     # train_list = utils.read_list('data/train_list.txt')
     # val_list = utils.read_list('data/val_list.txt')
-    composed = transforms.Compose([RandomCrop(256), Resize(224)])
+    composed = transforms.Compose([Resize(256), RandomCrop(224)])
     train_loader = torch.utils.data.DataLoader(AVDataset(train_list, transform=composed), batch_size=batch_size, shuffle=True, num_workers=4)
     val_loader = torch.utils.data.DataLoader(AVDataset(val_list, transform=composed), batch_size=test_batch_size,shuffle=True, num_workers=4)
 
