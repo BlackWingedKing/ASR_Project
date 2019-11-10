@@ -52,8 +52,10 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         i = 0
         print(len(train_loader))
         # print(list(train_loader))
-        for vid, aus, au in enumerate(train_loader):
+        for i in range (1,len(train_loader)):
             i+=1
+            vid, aus, au = train_loader[i]
+            print('in the iteration loop')
             vid = vid.to(device)
             aus = aus.to(device)
             au = au.to(device)
