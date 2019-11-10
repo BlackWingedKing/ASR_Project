@@ -24,12 +24,12 @@ class DataLoader(Dataset):
         # normalising video to -1 and 1
         vid = (2./255)*vid.double() - 1
         # normalising audio
-        aud_shifted = normalize_sfs(aud_shifted)
+        aud_shifted = normalize_sfs(torch.FloatTensor(aud_shifted))
         aud_unshifted = normalize_sfs(aud_unshifted)
 
         vid = vid.permute(3,0,1,2) # since skvideo reads (T,H,W,C) and our model needs
         # (B, C, T, H, W)
-        if self.transforms is not None:
+        if self.transform is not None:
             vid = self.transform(vid)
         return (vid, aud_shifted, aud_unshifted)
 
@@ -38,7 +38,7 @@ class DataLoader(Dataset):
 
 
 def normalize_sfs(sfs, scale=255.):
-    return torch.sign(sfs)*(torch.log(1 + scale*torch.abs(sfs)) / torch.log(1 + scale))
+    return torch.sign(sfs)*(torch.log(1 + scale*torch.abs(sfs)) / torch.log(1 + torch.Tensor([scale])))
 
 class Resize(object):
     """Resize the video to a given size.
