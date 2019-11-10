@@ -33,7 +33,7 @@ class AVDataset(Dataset):
             vid = self.transform(vid)
 
         vid = vid.permute(3,0,1,2) # since skvideo reads (T,H,W,C) and our model needs
-        return (vid, aud_shifted, aud_unshifted)
+        return (vid, aud_shifted[:87588], aud_unshifted[:87588])
 
     def __len__(self):
         return len(self.list)  # number of videos
