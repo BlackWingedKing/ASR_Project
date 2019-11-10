@@ -198,24 +198,31 @@ ashapes = []
 vshapes = []
 avshapes = []
 
+ashape = []
+vshape = []
+avshape = []
+
 for i in akeys:
     x = adict[i].shape
     ashapes.append(calprod(x))
+    ashape.append((i, x))
 
 for i in vkeys:
     x = vdict[i].shape
     vshapes.append(calprod(x))
+    vshape.append((i, x))
 
 for i in avkeys:
     x = avdict[i].shape
     avshapes.append(calprod(x))
+    avshape.append((i, x))
 
 # akeys, ashapes, vkeys, vshapes are in sync
 
 tf_path = os.path.abspath('/home/ritesh/Desktop/multisensory/results/nets/shift/net.tf-650000')  # Path to our TensorFlow checkpoint
 tf_vars = tf.train.list_variables(tf_path)
 
-# pprint(tf_vars[0:5])
+# pprint(tf_vars)
 # print(tf_vars)
 tfkeys = []
 tfshapes = []
@@ -224,6 +231,10 @@ for i in tf_vars:
     tfkeys.append(i[0])
     tfshapes.append(calprod(i[1]))
 print(len(tfshapes), len(ashapes), len(vshapes), len(avshapes))
+
+pprint(vshape)
+pprint(ashape)
+pprint(avshape)
 
 stfshapes, stfkeys = zip(*sorted(zip(tfshapes, tfkeys)))
 sashapes, sakeys = zip(*sorted(zip(ashapes, akeys)))
