@@ -181,14 +181,14 @@ class AudioNet(nn.Module):
         return y
 
 # # code for testing
-# Vmodel = VideoNet()
-# Amodel = AudioNet()
-# AVmodel = AVNet()
+Vmodel = VideoNet()
+Amodel = AudioNet()
+AVmodel = AVNet()
 
-# x = torch.randn(1,3,125,224,224)
-# y = torch.randn(1,2,87588,1,1)
+x = torch.randn(1,3,125,224,224)
+y = torch.randn(1,2,87588,1,1)
 
-# a = Vmodel(x)
-# b = Amodel(y)
-# a,b = AVmodel(a,b)
-# print(a.shape, b.shape)
+a = Vmodel(x)
+b = Amodel(y)
+a,b = AVmodel(a,b)
+print(a.shape, b.shape)
