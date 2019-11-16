@@ -18,13 +18,17 @@ class AVDataset(Dataset):
         # vid, aud_unshifted, info = io.read_video(self.path+'snippet/vid_'+str(index)+'.mp4')
 
         vid = torch.Tensor(skvideo.io.vread(self.path+'snippet/' + self.list[index]))
+        vid = vid[:125,:,:,:]
         aud_unshifted, info = torchaudio.load(self.path+'unshifted/' + self.list[index][:-4]+'.wav')
         aud_shifted, info = torchaudio.load(self.path+'shifted/' + self.list[index][:-4]+'.wav')
 
+        if aud_shifted.shape[0]<2:
+            aud_shifted = torch.cat((aud_shifted,aud_shifted),dim=0)
+            aud_unshifted = torch.cat((aud_unshifted,aud_unshifted),dim=0)
         # normalising video to -1 and 1
         vid = (2./255)*vid.double() - 1
         # normalising audio
-        aud_shifted = normalize_sfs(torch.FloatTensor(aud_shifted))
+        aud_shifted = normalize_sfs(aud_shifted)
         aud_unshifted = normalize_sfs(aud_unshifted)
 
         # (B, C, T, H, W)
@@ -32,7 +36,7 @@ class AVDataset(Dataset):
             vid = self.transform(vid)
 
         vid = vid.permute(3,0,1,2) # since skvideo reads (T,H,W,C) and our model needs
-        return (vid, aud_shifted, aud_unshifted)
+        return (vid, aud_shifted[:,:87588], aud_unshifted[:,:87588])
 
     def __len__(self):
         return len(self.list)  # number of videos
@@ -84,6 +88,7 @@ class RandomCrop(object):
     def __call__(self, vid):
         dim = vid.shape
         new_dim = self.output_size
+        # print(dim,new_dim)
         assert dim[1] > new_dim[0] and dim[2] > new_dim[1]
 
         top = torch.randint(dim[1] - new_dim[0],size=(1,1))[0,0]

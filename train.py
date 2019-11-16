@@ -23,7 +23,7 @@ from data_loader import AVDataset, Resize, RandomCrop
 import utils
 
 # parameters and hyper params
-batch_size = 2
+batch_size = 1
 test_batch_size = 2
 nepochs = 100
 LR = 0.001
@@ -35,8 +35,7 @@ torch.manual_seed(1)
 device = torch.device("cuda" if use_cuda else "cpu")
 kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-ce_loss = nn.CrossEntropyLoss()
-
+bce_loss = nn.BCELoss()
 
 def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
     # train function
@@ -51,26 +50,24 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         avmodel.train()
         trainloss = 0.0
         i = 0
-        print(len(train_loader))
-        # print(list(train_loader))
-        for vid, aus, au in enumerate(train_loader):
+        for batch_id, (vid, aus, au) in enumerate(train_loader):
             i+=1
             print('in the iteration loop')
             print(vid.shape, aus.shape, au.shape)
             vid = vid.to(device)
-            aus = aus.to(device)
-            au = au.to(device)
+            aus1 = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            au1 = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
             vfeat = vmodel(vid)
-            afeat = amodel(au)
-            asfeat = amodel(aus)
+            afeat = amodel(au1)
+            asfeat = amodel(aus1)
             p, _ = avmodel(vfeat, afeat)
             ps, _ = avmodel(vfeat, asfeat)
             gt = torch.ones_like(p).to(device)
             # loss = -1*torch.mean(torch.log(p) + torch.log(1-ps))
-            loss = torch.mean(ce_loss(p, gt) + ce_loss((1-ps), gt))
+            loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
             loss.backward()
             trainloss+=loss.item()
-        print('completed', i, 'iterations')
+            print('completed', i,'th', 'iteration')
         trainloss/=len(train_loader)
         valoss = val(vmodel, amodel, avmodel, val_loader)
         loss_list.append(trainloss)
@@ -93,21 +90,21 @@ def val(vmodel, amodel, avmodel, val_loader):
     amodel.eval()
     avmodel.eval()
     avgloss = 0.0
-    for vid, aus, au in enumerate(val_loader):
-        vid = vid.to(device)
-        aus = aus.to(device)
-        au = au.to(device)
-        vfeat = vmodel(vid)
-        afeat = amodel(au)
-        asfeat = amodel(aus)
-        p, _ = avmodel(vfeat, afeat)
-        ps, _ = avmodel(vfeat, asfeat)
-        gt = torch.ones_like(p).to(device)
-        # loss = torch.mean(torch.log(p) + torch.log(1-ps))
-        loss = torch.mean(ce_loss(p, gt) + ce_loss((1-ps), gt))
-        loss.backward()
-        avgloss+= loss.item()
-    return avgloss
+    with torch.no_grad():
+        for batch_id, (vid, aus, au) in enumerate(val_loader):
+            vid = vid.to(device)
+            aus = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            au = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            vfeat = vmodel(vid)
+            afeat = amodel(au)
+            asfeat = amodel(aus)
+            p, _ = avmodel(vfeat, afeat)
+            ps, _ = avmodel(vfeat, asfeat)
+            gt = torch.ones_like(p).to(device)
+            # loss = torch.mean(torch.log(p) + torch.log(1-ps))
+            loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
+            avgloss+= loss.item()
+        return avgloss
 
 
 def main():
@@ -125,7 +122,7 @@ def main():
     # uncomment following to read previous list
     # train_list = utils.read_list('data/train_list.txt')
     # val_list = utils.read_list('data/val_list.txt')
-    composed = transforms.Compose([RandomCrop(256), Resize(224)])
+    composed = transforms.Compose([Resize(256), RandomCrop(224)])
     train_loader = torch.utils.data.DataLoader(AVDataset(train_list, transform=composed), batch_size=batch_size, shuffle=True, num_workers=4)
     val_loader = torch.utils.data.DataLoader(AVDataset(val_list, transform=composed), batch_size=test_batch_size,shuffle=True, num_workers=4)
 
