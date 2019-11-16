@@ -110,11 +110,10 @@ class AVNet(nn.Module):
         # print(logits.shape)
         # probs, idxs = logits.sort(1, True)
         # class_idx = idxs[:, 0]
-        # print(self.cmm_weights.shape,combined.shape)
+        print(self.cmm_weights.shape,combined.shape,self.cmm_weights.unsqueeze(2).unsqueeze(3).unsqueeze(4).shape)
         cam = self.cmm_weights.unsqueeze(2).unsqueeze(3).unsqueeze(4)*combined
-        cam = torch.mean(cam,dim=2)
+        # cam = torch.mean(cam,dim=2)
         cam = torch.mean(cam,dim=1)
-        cam = cam.view(-1,7,7)
         # print(cam.shape)
         return logits,cam
 
