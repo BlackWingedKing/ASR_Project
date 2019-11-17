@@ -21,6 +21,7 @@ import time
 from model_fused import AVNet, VideoNet, AudioNet
 from data_loader import AVDataset, Resize, RandomCrop
 import utils
+from tqdm import tqdm
 
 # parameters and hyper params
 batch_size = 3
@@ -50,10 +51,10 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         avmodel.train()
         trainloss = 0.0
         i = 0
-        for batch_id, (vid, aus, au) in enumerate(train_loader):
+        for batch_id, (vid, aus, au) in enumerate(tqdm(train_loader)):
             i+=1
-            print('in the iteration loop')
-            print(vid.shape, aus.shape, au.shape)
+#             print('in the iteration loop')
+#             print(vid.shape, aus.shape, au.shape)
             vid = vid.to(device)
             aus1 = aus.unsqueeze(3).unsqueeze(4).to(device)
             au1 = au.unsqueeze(3).unsqueeze(4).to(device)
@@ -67,7 +68,7 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
             loss.backward()
             trainloss+=loss.item()
-            print('completed', i,'th', 'iteration')
+#             print('completed', i,'th', 'iteration')
         trainloss/=len(train_loader)
         valoss = val(vmodel, amodel, avmodel, val_loader)
         loss_list.append(trainloss)
@@ -123,8 +124,8 @@ def main():
     # train_list = utils.read_list('data/train_list.txt')
     # val_list = utils.read_list('data/val_list.txt')
     composed = transforms.Compose([Resize(256), RandomCrop(224)])
-    train_loader = torch.utils.data.DataLoader(AVDataset(train_list, transform=composed), batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = torch.utils.data.DataLoader(AVDataset(val_list, transform=composed), batch_size=test_batch_size,shuffle=True, num_workers=4)
+    train_loader = torch.utils.data.DataLoader(AVDataset(train_list, transform=composed), batch_size=batch_size, shuffle=True, num_workers=6)
+    val_loader = torch.utils.data.DataLoader(AVDataset(val_list, transform=composed), batch_size=test_batch_size,shuffle=True, num_workers=6)
 
     train(vmodel, amodel, avmodel, optimiser, nepochs, train_loader, val_loader)
 
