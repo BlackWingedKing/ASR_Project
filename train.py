@@ -23,7 +23,7 @@ from data_loader import AVDataset, Resize, RandomCrop
 import utils
 
 # parameters and hyper params
-batch_size = 1
+batch_size = 3
 test_batch_size = 2
 nepochs = 100
 LR = 0.001
@@ -55,8 +55,10 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             print('in the iteration loop')
             print(vid.shape, aus.shape, au.shape)
             vid = vid.to(device)
-            aus1 = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
-            au1 = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+#             aus1 = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+#             au1 = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            aus1 = aus.unsqueeze(3).unsqueeze(4).to(device)
+            au1 = au.unsqueeze(3).unsqueeze(4).to(device)
             vfeat = vmodel(vid)
             afeat = amodel(au1)
             asfeat = amodel(aus1)
