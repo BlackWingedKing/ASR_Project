@@ -92,7 +92,8 @@ def val(vmodel, amodel, avmodel, val_loader):
     avmodel.eval()
     avgloss = 0.0
     with torch.no_grad():
-        for batch_id, (vid, aus, au) in enumerate(val_loader):
+        print("Validation:")
+        for batch_id, (vid, aus, au) in enumerate(tqdm(val_loader)):
             vid = vid.to(device)
             aus = aus.unsqueeze(3).unsqueeze(4).to(device)
             au = au.unsqueeze(3).unsqueeze(4).to(device)
