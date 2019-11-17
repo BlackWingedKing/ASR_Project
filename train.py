@@ -26,7 +26,7 @@ import utils
 batch_size = 3
 test_batch_size = 2
 nepochs = 100
-LR = 0.001
+LR = 0.01
 
 #gpu settings
 use_cuda = torch.cuda.is_available()
@@ -113,7 +113,7 @@ def main():
     amodel = AudioNet().to(device)
     avmodel = AVNet().to(device)
     params = list(vmodel.parameters())+list(amodel.parameters())+list(avmodel.parameters())
-    optimiser = optim.Adam(params, lr=LR)
+    optimiser = optim.SGD(params, lr=LR)
     list_vid = os.listdir('data/train/full_vid')  # ensure no extra files like .DS_Store are present
     train_list, val_list = utils.split_data(list_vid, 0.8, 0.2)
     # log the list for reference
