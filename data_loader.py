@@ -23,8 +23,6 @@ class AVDataset(Dataset):
         aud_shifted, info = torchaudio.load(self.path+'shifted/' + self.list[index][:-4]+'.wav')
         aud_unshifted = aud_unshifted[:,:87588]
         aud_shifted = aud_shifted[:,:87588]
-#         if aud_shifted.shape[1]<87588 or aud_unshifted.shape[1]<87588:
-        print("aus = ",aud_unshifted.shape[1], "as = ",aud_shifted.shape[1], "vid = ", self.list[index])
             
         if aud_shifted.shape[0]<2:
             aud_shifted = torch.cat((aud_shifted,aud_shifted),dim=0)

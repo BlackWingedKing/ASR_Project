@@ -8,6 +8,9 @@ import sox
 import numpy as np
 from joblib import Parallel, delayed
 import os
+import skvideo.io
+import torchaudio
+from skimage import color
 
 
 def resample_audio(in_path, out_path, sample_rate):
@@ -112,6 +115,47 @@ def renumber_vid(path,start_from):
         os.rename(path+f, path+'vid_'+str(num)+frmat)
         num += 1
 
+def check_vid(n, name, norm_thresh, num_samp):
+    is_bad=False
+    vid = skvideo.io.vread('data/train/full_vid/'+name)
+    nFrames = vid.shape[0]
+    randFrames = np.random.permutation(nFrames-1)[0:10]
+    sum_norm = 0
+    for f_num in randFrames:
+        f1 = color.rgb2gray(vid[f_num,:,:,:])
+        f2 = color.rgb2gray(vid[min(f_num+30,nFrames-1),:,:,:])
+        temp = f2-f1
+        sum_norm += np.linalg.norm(temp)
+    if sum_norm<norm_thresh:
+        is_bad = True
+    fname = name[:-4]+'.wav'
+    try:
+        a, _ = torchaudio.load('data/train/shifted/'+fname)
+        if a.shape[1] < num_samp:
+            is_bad=True
+    except:
+        is_bad=True
+    print(is_bad)
+    if is_bad:
+        return n
+    else:
+        return -1
+
+
+def clean_data(norm_thresh,num_samp, njobs):
+    list_vid = os.listdir('data/train/full_vid/')
+    is_bad = Parallel(n_jobs=njobs, prefer="threads")(delayed(check_vid)(n,list_vid[n], norm_thresh, num_samp) for n in range(len(list_vid)))
+    is_bad = np.array(is_bad)
+    is_bad_idx = is_bad[is_bad>=0]
+    bad_data = []
+    for i in is_bad_idx:
+        bad_data.append(list_vid[i])
+    for bd in bad_data:
+        os.rename('data/train/full_vid/'+bd,'data/bad_data/full_vid/'+bd)
+        os.rename('data/train/shifted/'+bd[:-4]+'.wav','data/bad_data/shifted/'+bd[:-4]+'.wav')
+        os.rename('data/train/unshifted/'+bd[:-4]+'.wav','data/bad_data/unshifted/'+bd[:-4]+'.wav')
+    return bad_data
+
 
 def main():
     audioset_path = 'data/balanced_train_segments.csv'  # path to the list of YouTube videos
@@ -120,16 +164,17 @@ def main():
     num_videos = 500
     start_num = 0
     njobs=18
-    start_from = len(os.listdir('data/train/full_vid/'))+1
+#     start_from = len(os.listdir('data/train/full_vid/'))+1
     rng = np.random.RandomState(seed=42)
     download_video_parallel(audioset.iloc[start_num:start_num+num_videos, 0], audioset.iloc[start_num:start_num+num_videos, 1],
-                            audioset.iloc[start_num:start_num+num_videos, 2], 29.97, 22100, 'data/train/full_vid/','data/train/snippet/',
+                            audioset.iloc[start_num:start_num+num_videos, 2], 29.97, 21000, 'data/train/full_vid/','data/train/snippet/',
                             'data/train/shifted/', 'data/train/unshifted/', rng, njobs)
 
-    renumber_vid('data/train/full_vid/',start_from=start_from)
-    renumber_vid('data/train/snippet/',start_from=start_from)
-    renumber_vid('data/train/shifted/',start_from=start_from)
-    renumber_vid('data/train/unshifted/',start_from=start_from)
+#     renumber_vid('data/train/full_vid/',start_from=start_from)
+#     renumber_vid('data/train/snippet/',start_from=start_from)
+#     renumber_vid('data/train/shifted/',start_from=start_from)
+#     renumber_vid('data/train/unshifted/',start_from=start_from)
+    clean_data(20,87588,18)
 
 
 if __name__ == '__main__':
