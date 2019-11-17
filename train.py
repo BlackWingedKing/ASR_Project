@@ -74,13 +74,13 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         val_list.append(valoss)
 
         print('epoch: ', e, 'iteration: ', it, 'train loss: ', trainloss, 'val loss: ', valoss)
-        # if(prev_loss >= trainloss):
-        #     print('saving the model ')
-        #     torch.save(amodel.state_dict(), 'amodel.pt')
-        #     torch.save(vmodel.state_dict(), 'vmodel.pt')
-        #     torch.save(avmodel.state_dict(), 'avmodel.pt')
-        #     prev_loss = trainloss
-        #     print('model saved')
+        if(prev_loss >= trainloss):
+             print('saving the model ')
+             torch.save(amodel.state_dict(), 'amodel.pt')
+             torch.save(vmodel.state_dict(), 'vmodel.pt')
+             torch.save(avmodel.state_dict(), 'avmodel.pt')
+             prev_loss = trainloss
+             print('model saved')
     dicty = {'train_loss': loss_list, 'val loss': val_list}
     dft = pd.DataFrame(dicty)
     dft.to_hdf('log.h5', key='data')
