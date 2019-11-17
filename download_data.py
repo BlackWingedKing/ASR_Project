@@ -117,8 +117,12 @@ def renumber_vid(path,start_from):
 
 def check_vid(n, name, norm_thresh, num_samp):
     is_bad=False
-    vid = skvideo.io.vread('data/train/full_vid/'+name)
+    vid = skvideo.io.vread('data/train/snippet/'+name)
     nFrames = vid.shape[0]
+    print(nFrames)
+    if nFrames<125:
+        print(name," is bad")
+        return n
     randFrames = np.random.permutation(nFrames-1)[0:10]
     sum_norm = 0
     for f_num in randFrames:
@@ -127,19 +131,16 @@ def check_vid(n, name, norm_thresh, num_samp):
         temp = f2-f1
         sum_norm += np.linalg.norm(temp)
     if sum_norm<norm_thresh:
-        is_bad = True
+        return n
     fname = name[:-4]+'.wav'
     try:
         a, _ = torchaudio.load('data/train/shifted/'+fname)
         if a.shape[1] < num_samp:
-            is_bad=True
+            return n
     except:
-        is_bad=True
-    print(is_bad)
-    if is_bad:
         return n
-    else:
-        return -1
+    print(name," is good")
+    return -1
 
 
 def clean_data(norm_thresh,num_samp, njobs):
@@ -150,8 +151,10 @@ def clean_data(norm_thresh,num_samp, njobs):
     bad_data = []
     for i in is_bad_idx:
         bad_data.append(list_vid[i])
+    print(bad_data)
     for bd in bad_data:
         os.rename('data/train/full_vid/'+bd,'data/bad_data/full_vid/'+bd)
+        os.rename('data/train/snippet/'+bd,'data/bad_data/snippet/'+bd)
         os.rename('data/train/shifted/'+bd[:-4]+'.wav','data/bad_data/shifted/'+bd[:-4]+'.wav')
         os.rename('data/train/unshifted/'+bd[:-4]+'.wav','data/bad_data/unshifted/'+bd[:-4]+'.wav')
     return bad_data

@@ -55,8 +55,6 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             print('in the iteration loop')
             print(vid.shape, aus.shape, au.shape)
             vid = vid.to(device)
-#             aus1 = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
-#             au1 = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
             aus1 = aus.unsqueeze(3).unsqueeze(4).to(device)
             au1 = au.unsqueeze(3).unsqueeze(4).to(device)
             vfeat = vmodel(vid)
@@ -95,8 +93,8 @@ def val(vmodel, amodel, avmodel, val_loader):
     with torch.no_grad():
         for batch_id, (vid, aus, au) in enumerate(val_loader):
             vid = vid.to(device)
-            aus = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
-            au = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            aus = aus.unsqueeze(3).unsqueeze(4).to(device)
+            au = au.unsqueeze(3).unsqueeze(4).to(device)
             vfeat = vmodel(vid)
             afeat = amodel(au)
             asfeat = amodel(aus)
