@@ -53,6 +53,7 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         i = 0
         for batch_id, (vid, aus, au) in enumerate(tqdm(train_loader)):
             i+=1
+            optimiser.zero_grad()
 #             print('in the iteration loop')
 #             print(vid.shape, aus.shape, au.shape)
             vid = vid.to(device)
@@ -64,9 +65,10 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             p, _ = avmodel(vfeat, afeat)
             ps, _ = avmodel(vfeat, asfeat)
             gt = torch.ones_like(p).to(device)
-            # loss = -1*torch.mean(torch.log(p) + torch.log(1-ps))
-            loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
+            loss = -1*torch.mean(torch.log(p) + torch.log(1-ps))
+#             loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
             loss.backward()
+            optimiser.step()
             trainloss+=loss.item()
 #             print('completed', i,'th', 'iteration')
         trainloss/=len(train_loader)
@@ -115,7 +117,7 @@ def main():
     amodel = AudioNet().to(device)
     avmodel = AVNet().to(device)
     params = list(vmodel.parameters())+list(amodel.parameters())+list(avmodel.parameters())
-    optimiser = optim.SGD(params, lr=LR)
+    optimiser = optim.Adam(params, lr=LR)
     list_vid = os.listdir('data/train/full_vid')  # ensure no extra files like .DS_Store are present
     train_list, val_list = utils.split_data(list_vid, 0.8, 0.2)
     # log the list for reference
