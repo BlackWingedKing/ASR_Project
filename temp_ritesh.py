@@ -78,47 +78,46 @@ class AVNet(nn.Module):
         # now combine both x, y
         shape = list(x.size())
         y_tiled = y.repeat([1,1,1,shape[3],shape[4]])
-        print(y_tiled.shape)
+        # print(y_tiled.shape)
         combined = torch.cat([x,y_tiled],1)
-        print(combined.shape)
+        # print(combined.shape)
         short = torch.cat([combined[:,:64,:,:,:],combined[:,-64:,:,:,:]],1)
-        print(short.shape)
+        # print(short.shape)
         combined = F.relu(self.f_conv1(combined))
-        print(combined.shape)
+        # print(combined.shape)
         combined = self.f_conv2(combined)
-        print(combined.shape)
+        # print(combined.shape)
         combined = self.bn_f(combined+short)
-        print(combined.shape)
+        # print(combined.shape)
         combined = self.relu_f(combined)
-        print(combined.shape)
+        # print(combined.shape)
 
         combined = self.c_res1(combined)
-        print(combined.shape)
+        # print(combined.shape)
         combined = self.c_res2(combined)
-        print(combined.shape)
+        # print(combined.shape)
         combined = self.c_res3(combined)
-        print(combined.shape)
+        # print(combined.shape)
         combined = self.c_res4(combined)
-        print(combined.shape)
+        # print(combined.shape)
         combined = self.c_res5(combined)
-        print(combined.shape)
+        # print(combined.shape)
         combined = self.c_res6(combined)
-        print(combined.shape)
+        # print(combined.shape)
 
         gap = self.avgpool(combined)
-        print(gap.shape)
+        # print(gap.shape)
         logits = self.f_fcn(gap[:,:,0,0,0])
-        print(logits.shape)
+        # print(logits.shape)
         logits = self.sigmoid(logits)
-        print(logits.shape)
+        # print(logits.shape)
         # probs, idxs = logits.sort(1, True)
         # class_idx = idxs[:, 0]
-        print(self.cmm_weights.shape,combined.shape)
+#         print(self.cmm_weights.shape,combined.shape,self.cmm_weights.unsqueeze(2).unsqueeze(3).unsqueeze(4).shape)
         cam = self.cmm_weights.unsqueeze(2).unsqueeze(3).unsqueeze(4)*combined
-        cam = torch.mean(cam,dim=2)
+        # cam = torch.mean(cam,dim=2)
         cam = torch.mean(cam,dim=1)
-        cam = cam.view(-1,7,7)
-        print(cam.shape)
+        # print(cam.shape)
         return logits,cam
 
 class VideoNet(nn.Module):
@@ -141,13 +140,13 @@ class VideoNet(nn.Module):
         # and y's shape is assumed to be B*2*n_samples*1*1
         # first the image part
         x = F.relu(self.bn(self.im_conv1(x)))
-        print(x.shape)
+        # print(x.shape)
         x = self.im_pool1(x)
-        print(x.shape)
+        # print(x.shape)
         x = self.im_res1(x)
-        print(x.shape)
+        # print(x.shape)
         x= self.im_res2(x)
-        print(x.shape)
+        # print(x.shape)
         return x
 
 class AudioNet(nn.Module):
@@ -167,20 +166,21 @@ class AudioNet(nn.Module):
 
     def forward(self, y):
         # now extract from the audio
+        # print'in audio net and ': y.shape)
         y = F.relu(self.bn1(self.a_conv1(y)))
-        print(y.shape)
+        # print(y.shape)
         y = self.a_pool1(y)
-        print(y.shape)
+        # print(y.shape)
         y = self.a_res1(y)
-        print(y.shape)
+        # print(y.shape)
         y = self.a_res2(y)
-        print(y.shape)
+        # print(y.shape)
         y = self.a_res3(y)
-        print(y.shape)
+        # print(y.shape)
         y = self.a_pool2(y.repeat([1,1,1,2,2]))
-        print(y.shape)
+        # print(y.shape)
         y = F.relu(self.bn2(self.a_conv2(y)))
-        print(y.shape)
+        # print(y.shape)
         return y
 
 def calprod(a):
@@ -226,27 +226,239 @@ for i in avkeys:
 tf_path = os.path.abspath('/home/ritesh/Desktop/multisensory/results/nets/shift/net.tf-650000')  # Path to our TensorFlow checkpoint
 tf_vars = tf.train.list_variables(tf_path)
 
-# pprint(tf_vars)
+pprint(tf_vars)
 # print(tf_vars)
+# for i in tf_vars:
+#     print'\'':str(i[0]),'\'':':': i[1])
 tfkeys = []
 tfshapes = []
 
-for i in tf_vars:
-    tfkeys.append(i[0])
-    tfshapes.append(calprod(i[1]))
-print(len(tfshapes), len(ashapes), len(vshapes), len(avshapes))
+# for i in tf_vars:
+#     tfkeys.append(i[0])
+#     tfshapes.append(calprod(i[1]))
+# print(len(tfshapes), len(ashapes), len(vshapes), len(avshapes))
 
-pprint(vshape)
-pprint(ashape)
-pprint(avshape)
+# pprint(vshape)
+# pprint(ashape)
+# pprint(avshape)
 
-stfshapes, stfkeys = zip(*sorted(zip(tfshapes, tfkeys)))
-sashapes, sakeys = zip(*sorted(zip(ashapes, akeys)))
-svshapes, svkeys = zip(*sorted(zip(vshapes, vkeys)))
-savshapes, savkeys = zip(*sorted(zip(avshapes, avkeys)))
+# stfshapes, stfkeys = zip(*sorted(zip(tfshapes, tfkeys)))
+# sashapes, sakeys = zip(*sorted(zip(ashapes, akeys)))
+# svshapes, svkeys = zip(*sorted(zip(vshapes, vkeys)))
+# savshapes, savkeys = zip(*sorted(zip(avshapes, avkeys)))
 
-ptkeys = akeys + vkeys + avkeys
-ptshapes = ashapes + vshapes + avshapes
-sptshapes, sptkeys = zip(*sorted(zip(ptshapes, ptkeys)))
+# ptkeys = akeys + vkeys + avkeys
+# ptshapes = ashapes + vshapes + avshapes
+# sptshapes, sptkeys = zip(*sorted(zip(ptshapes, ptkeys)))
 
-print(len(list(set(list(sptshapes)))), len(list(set(list(stfshapes)))))
+# print(len(list(set(list(sptshapes)))), len(list(set(list(stfshapes)))))
+
+# here the dict creation starts
+vmapper = {
+ 'im_conv1.weight': 'im/conv1/weights',
+ 'im_conv1.bias': 'n',
+ 'bn.weight': 'n',
+ 'bn.bias': 'im/conv1/BatchNorm/beta',
+ 'bn.running_mean': 'im/conv1/BatchNorm/moving_mean',
+ 'bn.running_var': 'im/conv1/BatchNorm/moving_variance',
+ 'bn.num_batches_tracked': 'n',
+ 'im_res1.conv1.weight': 'im/conv2_1_1/weights',
+ 'im_res1.conv1.bias': 'n',
+ 'im_res1.conv2.weight': 'im/conv2_1_2/weights',
+ 'im_res1.conv2.bias': 'im/conv2_1_2/biases',
+ 'im_res1.bn1.weight': 'n',
+ 'im_res1.bn1.bias': 'im/conv2_1_1/BatchNorm/beta',
+ 'im_res1.bn1.running_mean': 'im/conv2_1_1/BatchNorm/moving_mean',
+ 'im_res1.bn1.running_var': 'im/conv2_1_1/BatchNorm/moving_variance',
+ 'im_res1.bn1.num_batches_tracked': 'n',
+ 'im_res1.bn2.weight': 'n',
+ 'im_res1.bn2.bias': 'im/conv2_1_bn/beta',
+ 'im_res1.bn2.running_mean': 'im/conv2_1_bn/moving_mean',
+ 'im_res1.bn2.running_var': 'im/conv2_1_bn/moving_variance',
+ 'im_res1.bn2.num_batches_tracked': 'n',
+ 'im_res2.conv1.weight': 'im/conv2_2_1/weights',
+ 'im_res2.conv1.bias': 'n',
+ 'im_res2.conv2.weight': 'im/conv2_2_2/weights',
+ 'im_res2.conv2.bias': 'im/conv2_2_2/biases',
+ 'im_res2.bn1.weight': 'n',
+ 'im_res2.bn1.bias': 'im/conv2_2_1/BatchNorm/beta',
+ 'im_res2.bn1.running_mean': 'im/conv2_2_1/BatchNorm/moving_mean',
+ 'im_res2.bn1.running_var': 'im/conv2_2_1/BatchNorm/moving_variance',
+ 'im_res2.bn1.num_batches_tracked': 'n',
+ 'im_res2.bn2.weight': 'n',
+ 'im_res2.bn2.bias': 'im/conv2_2_bn/beta',
+ 'im_res2.bn2.running_mean': 'im/conv2_2_bn/moving_mean',
+ 'im_res2.bn2.running_var': 'im/conv2_2_bn/moving_variance',
+ 'im_res2.bn2.num_batches_tracked': 'n'
+}
+
+amapper = {
+ 'a_conv1.weight': 'sf/conv1_1/weights',
+ 'a_conv1.bias': 'n',
+ 'bn1.weight': 'n',
+ 'bn1.bias': 'sf/conv1_1/BatchNorm/beta',
+ 'bn1.running_mean': 'sf/conv1_1/BatchNorm/moving_mean',
+ 'bn1.running_var': 'sf/conv1_1/BatchNorm/moving_variance',
+ 'bn1.num_batches_tracked': 'n',
+ 'a_res1.conv1.weight': 'sf/conv2_1_1/weights',
+ 'a_res1.conv1.bias': 'n',
+ 'a_res1.conv2.weight': 'sf/conv2_1_2/weights',
+ 'a_res1.conv2.bias': 'sf/conv2_1_2/biases',
+ 'a_res1.bn1.weight': 'n',
+ 'a_res1.bn1.bias': 'sf/conv2_1_1/BatchNorm/beta',
+ 'a_res1.bn1.running_mean': 'sf/conv2_1_1/BatchNorm/moving_mean',
+ 'a_res1.bn1.running_var': 'sf/conv2_1_1/BatchNorm/moving_variance',
+ 'a_res1.bn1.num_batches_tracked': 'n',
+ 'a_res1.bn2.weight': 'n',
+ 'a_res1.bn2.bias': 'sf/conv2_1_bn/beta',
+ 'a_res1.bn2.running_mean': 'sf/conv2_1_bn/moving_mean',
+ 'a_res1.bn2.running_var': 'sf/conv2_1_bn/moving_variance',
+ 'a_res1.bn2.num_batches_tracked': 'n',
+ 'a_res1.downsample_layer.weight': 'sf/conv2_1_short/weights',
+ 'a_res1.downsample_layer.bias': 'n',
+ ######  here missed a batch norm for downsample layer model change needed
+ 'a_res2.conv1.weight': 'sf/conv3_1_1/weights',
+ 'a_res2.conv1.bias': 'n',
+ 'a_res2.conv2.weight': 'sf/conv3_1_2/weights',
+ 'a_res2.conv2.bias': 'sf/conv3_1_2/biases',
+ 'a_res2.bn1.weight': 'n',
+ 'a_res2.bn1.bias': 'sf/conv3_1_1/BatchNorm/beta',
+ 'a_res2.bn1.running_mean': 'sf/conv3_1_1/BatchNorm/moving_mean',
+ 'a_res2.bn1.running_var': 'sf/conv3_1_1/BatchNorm/moving_variance',
+ 'a_res2.bn1.num_batches_tracked': 'n',
+ 'a_res2.bn2.weight': 'n',
+ 'a_res2.bn2.bias': 'sf/conv3_1_bn/beta',
+ 'a_res2.bn2.running_mean': 'sf/conv3_1_bn/moving_mean',
+ 'a_res2.bn2.running_var': 'sf/conv3_1_bn/moving_variance',
+ 'a_res2.bn2.num_batches_tracked': 'n',
+ 'a_res3.conv1.weight': 'sf/conv4_1_1/weights',
+ 'a_res3.conv1.bias': 'n',
+ 'a_res3.conv2.weight': 'sf/conv4_1_2/weights',
+ 'a_res3.conv2.bias': 'sf/conv4_1_2/biases',
+ 'a_res3.bn1.weight': 'n',
+ 'a_res3.bn1.bias': 'sf/conv4_1_1/BatchNorm/beta',
+ 'a_res3.bn1.running_mean': 'sf/conv4_1_1/BatchNorm/moving_mean',
+ 'a_res3.bn1.running_var': 'sf/conv4_1_1/BatchNorm/moving_variance',
+ 'a_res3.bn1.num_batches_tracked': 'n',
+ 'a_res3.bn2.weight': 'n',
+ 'a_res3.bn2.bias': 'sf/conv4_1_bn/beta',
+ 'a_res3.bn2.running_mean': 'sf/conv4_1_bn/moving_mean',
+ 'a_res3.bn2.running_var': 'sf/conv4_1_bn/moving_variance',
+ 'a_res3.bn2.num_batches_tracked': 'n',
+ 'a_res3.downsample_layer.weight': 'sf/conv4_1_short/weights',
+ 'a_res3.downsample_layer.bias': 'n',
+ ############### here missing anpther batch norm
+ 'a_conv2.weight': 'sf/conv5_1/weights',
+ 'a_conv2.bias': 'n',
+ 'bn2.weight': 'n',
+ 'bn2.bias': 'sf/conv5_1/BatchNorm/beta',
+ 'bn2.running_mean': 'sf/conv5_1/BatchNorm/moving_mean',
+ 'bn2.running_var': 'sf/conv5_1/BatchNorm/moving_variance',
+ 'bn2.num_batches_tracked': 'n'
+}
+
+avmapper = {
+ 'cmm_weights': 'joint/logits/weights',
+ 'f_conv1.weight': 'im/merge1/weights',
+ 'f_conv1.bias': 'n',
+############# missing batch norm for the merge1 or f_conv1 
+ 'f_conv2.weight': 'im/merge2/weights',
+ 'f_conv2.bias': 'im/merge2/biases',
+ 'bn_f.weight': 'n',
+ 'bn_f.bias': 'im/merge_block_bn/beta',
+ 'bn_f.running_mean': 'im/merge_block_bn/moving_mean',
+ 'bn_f.running_var': 'im/merge_block_bn/moving_variance',
+ 'bn_f.num_batches_tracked': 'n',
+ 'c_res1.conv1.weight': 'im/conv3_1_1/weights',
+ 'c_res1.conv1.bias': 'n',
+ 'c_res1.conv2.weight': 'im/conv3_1_2/weights',
+ 'c_res1.conv2.bias': 'im/conv3_1_2/biases',
+ 'c_res1.bn1.weight': 'n',
+ 'c_res1.bn1.bias': 'im/conv3_1_1/BatchNorm/beta',
+ 'c_res1.bn1.running_mean': 'im/conv3_1_1/BatchNorm/moving_mean',
+ 'c_res1.bn1.running_var': 'im/conv3_1_1/BatchNorm/moving_variance',
+ 'c_res1.bn1.num_batches_tracked': 'n',
+ 'c_res1.bn2.weight': 'n',
+ 'c_res1.bn2.bias': 'im/conv3_1_bn/beta',
+ 'c_res1.bn2.running_mean': 'im/conv3_1_bn/moving_mean',
+ 'c_res1.bn2.running_var': 'im/conv3_1_bn/moving_variance',
+ 'c_res1.bn2.num_batches_tracked': 'n',
+ 'c_res2.conv1.weight': 'im/conv3_2_1/weights',
+ 'c_res2.conv1.bias': 'n',
+ 'c_res2.conv2.weight': 'im/conv3_2_2/weights',
+ 'c_res2.conv2.bias': 'im/conv3_2_2/biases',
+ 'c_res2.bn1.weight': 'n',
+ 'c_res2.bn1.bias': 'im/conv3_2_1/BatchNorm/beta',
+ 'c_res2.bn1.running_mean': 'im/conv3_2_1/BatchNorm/moving_mean',
+ 'c_res2.bn1.running_var': 'im/conv3_2_1/BatchNorm/moving_variance',
+ 'c_res2.bn1.num_batches_tracked': 'n',
+ 'c_res2.bn2.weight': 'n',
+ 'c_res2.bn2.bias': 'im/conv3_2_bn/beta',
+ 'c_res2.bn2.running_mean': 'im/conv3_2_bn/moving_mean',
+ 'c_res2.bn2.running_var': 'im/conv3_2_bn/moving_variance',
+ 'c_res2.bn2.num_batches_tracked': 'n',
+ 'c_res3.conv1.weight': 'im/conv4_1_1/weights',
+ 'c_res3.conv1.bias': 'n',
+ 'c_res3.conv2.weight': 'im/conv4_1_2/weights',
+ 'c_res3.conv2.bias': 'im/conv4_1_2/biases',
+ 'c_res3.bn1.weight': 'n',
+ 'c_res3.bn1.bias': 'im/conv4_1_1/BatchNorm/beta',
+ 'c_res3.bn1.running_mean': 'im/conv4_1_1/BatchNorm/moving_mean',
+ 'c_res3.bn1.running_var': 'im/conv4_1_1/BatchNorm/moving_variance',
+ 'c_res3.bn1.num_batches_tracked': 'n',
+ 'c_res3.bn2.weight': 'n',
+ 'c_res3.bn2.bias': 'im/conv4_1_bn/beta',
+ 'c_res3.bn2.running_mean': 'im/conv4_1_bn/moving_mean',
+ 'c_res3.bn2.running_var': 'im/conv4_1_bn/moving_variance',
+ 'c_res3.bn2.num_batches_tracked': 'n',
+ 'c_res3.downsample_layer.weight': 'im/conv4_1_short/weights',
+ 'c_res3.downsample_layer.bias': 'n',
+ ###################### misssing a bn for short or downsample layer here
+ 'c_res4.conv1.weight': 'im/conv4_2_1/weights',
+ 'c_res4.conv1.bias': 'n',
+ 'c_res4.conv2.weight': 'im/conv4_2_2/weights',
+ 'c_res4.conv2.bias': 'im/conv4_2_2/biases',
+ 'c_res4.bn1.weight': 'n',
+ 'c_res4.bn1.bias': 'im/conv4_2_1/BatchNorm/beta',
+ 'c_res4.bn1.running_mean': 'im/conv4_2_1/BatchNorm/moving_mean',
+ 'c_res4.bn1.running_var': 'im/conv4_2_1/BatchNorm/moving_variance',
+ 'c_res4.bn1.num_batches_tracked': 'n',
+ 'c_res4.bn2.weight': 'n',
+ 'c_res4.bn2.bias': 'im/conv4_2_bn/beta',
+ 'c_res4.bn2.running_mean': 'im/conv4_2_bn/moving_mean',
+ 'c_res4.bn2.running_var': 'im/conv4_2_bn/moving_variance',
+ 'c_res4.bn2.num_batches_tracked': 'n',
+ 'c_res5.conv1.weight': 'im/conv5_1_1/weights',
+ 'c_res5.conv1.bias': 'n',
+ 'c_res5.conv2.weight': 'im/conv5_1_2/weights',
+ 'c_res5.conv2.bias': 'im/conv5_1_2/biases',
+ 'c_res5.bn1.weight': 'n',
+ 'c_res5.bn1.bias': 'im/conv5_1_1/BatchNorm/beta',
+ 'c_res5.bn1.running_mean': 'im/conv5_1_1/BatchNorm/moving_mean',
+ 'c_res5.bn1.running_var': 'im/conv5_1_1/BatchNorm/moving_variance',
+ 'c_res5.bn1.num_batches_tracked': 'n',
+ 'c_res5.bn2.weight': 'n',
+ 'c_res5.bn2.bias': 'im/conv5_1_bn/beta',
+ 'c_res5.bn2.running_mean': 'im/conv5_1_bn/moving_mean',
+ 'c_res5.bn2.running_var': 'im/conv5_1_bn/moving_variance',
+ 'c_res5.bn2.num_batches_tracked': 'n',
+ 'c_res5.downsample_layer.weight': 'im/conv5_1_short/weights',
+ 'c_res5.downsample_layer.bias': 'n',
+ ############## misssing batch norm for short layers here
+ 'c_res6.conv1.weight': 'im/conv5_2_1/weights',
+ 'c_res6.conv1.bias': 'n',
+ 'c_res6.conv2.weight': 'im/conv5_2_2/weights',
+ 'c_res6.conv2.bias': 'im/conv5_2_2/biases',
+ 'c_res6.bn1.weight': 'n',
+ 'c_res6.bn1.bias': 'im/conv5_2_1/BatchNorm/beta',
+ 'c_res6.bn1.running_mean': 'im/conv5_2_1/BatchNorm/moving_mean',
+ 'c_res6.bn1.running_var': 'im/conv5_2_1/BatchNorm/moving_variance',
+ 'c_res6.bn1.num_batches_tracked': 'n',
+ 'c_res6.bn2.weight': 'n',
+ 'c_res6.bn2.bias': 'im/conv5_2_bn/beta',
+ 'c_res6.bn2.running_mean': 'im/conv5_2_bn/moving_mean',
+ 'c_res6.bn2.running_var': 'im/conv5_2_bn/moving_variance',
+ 'c_res6.bn2.num_batches_tracked': 'n',
+ 'f_fcn.weight': 'joint/logits/weights',
+ 'f_fcn.bias': 'joint/logits/biases'
+}
