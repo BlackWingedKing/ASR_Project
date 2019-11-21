@@ -30,7 +30,7 @@ class residual_block(nn.Module):
         self.downsample_conv = 0
         if(in_feats==out_feats and stride!=[1,1,1]):
             self.downsample_conv = 1
-            self.downsample_layer =nn.MaxPool3d(kernel_size=[1,1,1],stride=stride,bias=False)
+            self.downsample_layer =nn.MaxPool3d(kernel_size=[1,1,1],stride=stride)
         if(in_feats!=out_feats and stride!=[1,1,1]):
             self.downsample_conv = 2
             self.downsample_layer = nn.Conv3d(in_channels=in_feats,out_channels=out_feats,kernel_size=[1,1,1],stride=stride,bias=False)

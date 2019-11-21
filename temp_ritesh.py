@@ -21,6 +21,7 @@ import time
 import os
 import tensorflow as tf
 from pprint import pprint
+from model_fused import VideoNet, AudioNet, AVNet
 
 def calprod(a):
     s=1
@@ -71,26 +72,7 @@ pprint(tf_vars)
 #     print'\'':str(i[0]),'\'':':': i[1])
 tfkeys = []
 tfshapes = []
-
-# for i in tf_vars:
-#     tfkeys.append(i[0])
-#     tfshapes.append(calprod(i[1]))
-# print(len(tfshapes), len(ashapes), len(vshapes), len(avshapes))
-
-# pprint(vshape)
-# pprint(ashape)
-# pprint(avshape)
-
-# stfshapes, stfkeys = zip(*sorted(zip(tfshapes, tfkeys)))
-# sashapes, sakeys = zip(*sorted(zip(ashapes, akeys)))
-# svshapes, svkeys = zip(*sorted(zip(vshapes, vkeys)))
-# savshapes, savkeys = zip(*sorted(zip(avshapes, avkeys)))
-
-# ptkeys = akeys + vkeys + avkeys
-# ptshapes = ashapes + vshapes + avshapes
-# sptshapes, sptkeys = zip(*sorted(zip(ptshapes, ptkeys)))
-
-# print(len(list(set(list(sptshapes)))), len(list(set(list(stfshapes)))))
+pprint(ashape)
 
 # here the dict creation starts
 vmapper = {
