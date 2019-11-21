@@ -78,12 +78,12 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         val_list.append(valoss)
 
         print('epoch: ', e, 'iteration: ', it, 'train loss: ', trainloss, 'val loss: ', valoss)
-        if(prev_loss >= valloss):
+        if(prev_loss >= valoss):
              print('saving the model ')
              torch.save(amodel.state_dict(), 'amodel.pt')
              torch.save(vmodel.state_dict(), 'vmodel.pt')
              torch.save(avmodel.state_dict(), 'avmodel.pt')
-             prev_loss = valloss
+             prev_loss = valoss
              print('model saved')
     dicty = {'train_loss': loss_list, 'val loss': val_list}
     dft = pd.DataFrame(dicty)
@@ -117,6 +117,10 @@ def main():
     vmodel = VideoNet().to(device)
     amodel = AudioNet().to(device)
     avmodel = AVNet().to(device)
+    vmodel.load_state_dict(torch.load('./pretrained/tfvmodel.pt'))
+    amodel.load_state_dict(torch.load('./pretrained/tfamodel.pt'))
+    avmodel.load_state_dict(torch.load('./pretrained/tfavmodel.pt'))
+    print('loaded model')
     params = list(vmodel.parameters())+list(amodel.parameters())+list(avmodel.parameters())
     optimiser = optim.Adam(params, lr=LR)
     list_vid = os.listdir('data/train/full_vid')  # ensure no extra files like .DS_Store are present
