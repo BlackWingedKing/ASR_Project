@@ -49,7 +49,7 @@ class AVNet(nn.Module):
     def __init__(self):
         super(AVNet, self).__init__()
         # fusion layers
-        self.f_conv1 = nn.Conv3d(in_channels=192,out_channels=512,kernel_size=[1,1,1])
+        self.f_conv1 = nn.Conv3d(in_channels=192,out_channels=512,kernel_size=[1,1,1],bias=False)
         self.f_conv2 = nn.Conv3d(in_channels=512,out_channels=128,kernel_size=[1,1,1])
         self.bn_f = nn.BatchNorm3d(128)
         self.relu_f = nn.ReLU(inplace=True)
