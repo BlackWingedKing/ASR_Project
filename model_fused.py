@@ -30,10 +30,10 @@ class residual_block(nn.Module):
         self.downsample_conv = 0
         if(in_feats==out_feats and stride!=[1,1,1]):
             self.downsample_conv = 1
-            self.downsample_layer =nn.MaxPool3d(kernel_size=[1,1,1],stride=stride)
+            self.downsample_layer =nn.MaxPool3d(kernel_size=[1,1,1],stride=stride,bias=False)
         if(in_feats!=out_feats and stride!=[1,1,1]):
             self.downsample_conv = 2
-            self.downsample_layer = nn.Conv3d(in_channels=in_feats,out_channels=out_feats,kernel_size=[1,1,1],stride=stride)
+            self.downsample_layer = nn.Conv3d(in_channels=in_feats,out_channels=out_feats,kernel_size=[1,1,1],stride=stride,bias=False)
     def forward(self,x):
         identity = x
         out = F.relu(self.bn1(self.conv1(x)))
@@ -158,7 +158,7 @@ class AudioNet(nn.Module):
         self.a_res2 = residual_block(128,128,[15,1,1],(7,0,0),[4,1,1])
         self.a_res3 = residual_block(128,256,[15,1,1],(7,0,0),[4,1,1])
         self.a_pool2 = nn.FractionalMaxPool3d(kernel_size=[3,1,1],output_size=(32,1,1))
-        self.a_conv2 = nn.Conv3d(in_channels=256,out_channels=128,kernel_size=[3,1,1],padding=(1,0,0))
+        self.a_conv2 = nn.Conv3d(in_channels=256,out_channels=128,kernel_size=[3,1,1],padding=(1,0,0),bias=False)
         self.bn2 = nn.BatchNorm3d(128)
 
     def forward(self, y):
