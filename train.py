@@ -22,12 +22,12 @@ from model_fused import AVNet, VideoNet, AudioNet
 from data_loader import AVDataset, Resize, RandomCrop
 import utils
 from tqdm import tqdm
-
+from findcam import *
 # parameters and hyper params
 batch_size = 3
-test_batch_size = 2
+test_batch_size = 3
 nepochs = 100
-LR = 0.01
+LR = 0.001
 
 #gpu settings
 use_cuda = torch.cuda.is_available()
@@ -64,13 +64,16 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             asfeat = amodel(aus1)
             p, _ = avmodel(vfeat, afeat)
             ps, _ = avmodel(vfeat, asfeat)
+            print('train',p)
+            print('train',ps)
             gt = torch.ones_like(p).to(device)
-            loss = -1*torch.mean(torch.log(p) + torch.log(1-ps))
-#             loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
+            # loss = -1*torch.mean(torchvision.log(p) + torch.log(1-ps))
+            loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
             loss.backward()
             optimiser.step()
             trainloss+=loss.item()
 #             print('completed', i,'th', 'iteration')
+        print(len(train_loader),len(val_loader))
         trainloss = trainloss*batch_size
         trainloss/=len(train_loader)
         valoss = val(vmodel, amodel, avmodel, val_loader)
@@ -103,13 +106,15 @@ def val(vmodel, amodel, avmodel, val_loader):
             vfeat = vmodel(vid)
             afeat = amodel(au)
             asfeat = amodel(aus)
-            p, _ = avmodel(vfeat, afeat)
+            p, cam = avmodel(vfeat, afeat)
             ps, _ = avmodel(vfeat, asfeat)
+            print('val',p)
+            print('val',ps)
             gt = torch.ones_like(p).to(device)
             # loss = torch.mean(torch.log(p) + torch.log(1-ps))
             loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
             avgloss+= loss.item()
-        return avgloss*test_batch_size/len(val_loader)
+        return avgloss*test_batch_size/len(val_loader),p,cam
 
 
 def main():
@@ -131,11 +136,18 @@ def main():
     # uncomment following to read previous list
     # train_list = utils.read_list('data/train_list.txt')
     # val_list = utils.read_list('data/val_list.txt')
+    train_list = ['video_232.mp4']
     composed = transforms.Compose([Resize(256), RandomCrop(224)])
-    train_loader = torch.utils.data.DataLoader(AVDataset(train_list, transform=composed), batch_size=batch_size, shuffle=True, num_workers=6)
-    val_loader = torch.utils.data.DataLoader(AVDataset(val_list, transform=composed), batch_size=test_batch_size,shuffle=True, num_workers=6)
-
-    train(vmodel, amodel, avmodel, optimiser, nepochs, train_loader, val_loader)
+    # composed = transforms.Compose([Resize(256)])
+    train_loader = torch.utils.data.DataLoader(AVDataset(train_list[:1], transform=composed), batch_size=batch_size, shuffle=False, num_workers=4)
+    val_loader = torch.utils.data.DataLoader(AVDataset(train_list[:1], transform=composed), batch_size=test_batch_size,shuffle=False, num_workers=4)
+    l,p,cam=val(vmodel,amodel,avmodel,val_loader)
+    print(p,cam.shape)
+    import skvideo.io
+    vids=skvideo.io.vread('data/train/'+'snippet/video_232.mp4')
+    vids = vids[:16]
+    findcam(np.expand_dims(vids,0),cam.cpu().numpy())
+    # train(vmodel, amodel, avmodel, optimiser, nepochs, train_loader, val_loader)
 
 
 if __name__ == '__main__':

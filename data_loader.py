@@ -7,7 +7,6 @@ import os
 # from skimage import io
 import skimage
 import skvideo.io
-
 class AVDataset(Dataset):
     def __init__(self, train_list, path='data/train/', transform=None):
         self.path = path
@@ -23,7 +22,7 @@ class AVDataset(Dataset):
         aud_shifted, info = torchaudio.load(self.path+'shifted/' + self.list[index][:-4]+'.wav')
         aud_unshifted = aud_unshifted[:,:87588]
         aud_shifted = aud_shifted[:,:87588]
-            
+
         if aud_shifted.shape[0]<2:
             aud_shifted = torch.cat((aud_shifted,aud_shifted),dim=0)
             aud_unshifted = torch.cat((aud_unshifted,aud_unshifted),dim=0)
