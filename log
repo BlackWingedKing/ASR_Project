@@ -1,0 +1,74 @@
+('1 sf_net', TensorShape([Dimension(1), Dimension(87588), Dimension(2)]))
+('2 sf_net', TensorShape([Dimension(1), Dimension(87588), Dimension(1), Dimension(2)]))
+sf/conv1_1 -> [1, 21897, 1, 64]
+('3 sf_net', TensorShape([Dimension(1), Dimension(21897), Dimension(1), Dimension(64)]))
+('4 sf_net', TensorShape([Dimension(1), Dimension(5474), Dimension(1), Dimension(64)]))
+sf/conv2_1_short -> [1, 1369, 1, 128]
+sf/conv2_1_1 -> [1, 1369, 1, 128]
+sf/conv2_1_2 -> [1, 1369, 1, 128]
+('5 sf_net', TensorShape([Dimension(1), Dimension(1369), Dimension(1), Dimension(128)]))
+sf/conv3_1_1 -> [1, 343, 1, 128]
+sf/conv3_1_2 -> [1, 343, 1, 128]
+('6 sf_net', TensorShape([Dimension(1), Dimension(343), Dimension(1), Dimension(128)]))
+sf/conv4_1_short -> [1, 86, 1, 256]
+sf/conv4_1_1 -> [1, 86, 1, 256]
+sf/conv4_1_2 -> [1, 86, 1, 256]
+('7 sf_net', TensorShape([Dimension(1), Dimension(86), Dimension(1), Dimension(256)]))
+bn scale: False
+arg_scope train = False
+('2 im_net', TensorShape([Dimension(1), Dimension(125), Dimension(224), Dimension(224), Dimension(3)]))
+im/conv1 -> [1, 63, 112, 112, 64] before: [1, 125, 224, 224, 3]
+('3 im_net', TensorShape([Dimension(1), Dimension(63), Dimension(112), Dimension(112), Dimension(64)]))
+pool -> [1, 63, 56, 56, 64]
+('4 im_net', TensorShape([Dimension(1), Dimension(63), Dimension(56), Dimension(56), Dimension(64)]))
+im/conv2_1_1 -> [1, 63, 56, 56, 64] before: [1, 63, 56, 56, 64]
+im/conv2_1_2 -> [1, 63, 56, 56, 64] before: [1, 63, 56, 56, 64]
+('5 im_net', TensorShape([Dimension(1), Dimension(63), Dimension(56), Dimension(56), Dimension(64)]))
+pool -> [1, 32, 28, 28, 64]
+im/conv2_2_1 -> [1, 32, 28, 28, 64] before: [1, 63, 56, 56, 64]
+im/conv2_2_2 -> [1, 32, 28, 28, 64] before: [1, 32, 28, 28, 64]
+('6 im_net', TensorShape([Dimension(1), Dimension(32), Dimension(28), Dimension(28), Dimension(64)]))
+frac: 2.65625
+bn scale: False
+arg_scope train = False
+sf/conv5_1 -> [1, 32, 1, 128]
+bn scale: False
+arg_scope train = False
+(1, 32, 1, 128)
+(1, 32, 128)
+(1, 32, 1, 1, 128)
+(1, 32, 28, 28, 128)
+sf_net shape before merge: [1, 86, 1, 256], and after merge: [1, 32, 1, 256]
+(1, 32, 28, 28, 192)
+im/merge1 -> [1, 32, 28, 28, 512] before: [1, 32, 28, 28, 192]
+im/merge2 -> [1, 32, 28, 28, 128] before: [1, 32, 28, 28, 512]
+('1 net', TensorShape([Dimension(1)																																																																																																																																																																																																																																																																																																																																																																																																																																				, Dimension(32), Dimension(28), Dimension(28), Dimension(128)]))
+bn scale: False
+arg_scope train = False
+im/conv3_1_1 -> [1, 32, 28, 28, 128] before: [1, 32, 28, 28, 128]
+im/conv3_1_2 -> [1, 32, 28, 28, 128] before: [1, 32, 28, 28, 128]
+('2 net', TensorShape([Dimension(1), Dimension(32), Dimension(28), Dimension(28), Dimension(128)]))
+im/conv3_2_1 -> [1, 32, 28, 28, 128] before: [1, 32, 28, 28, 128]
+im/conv3_2_2 -> [1, 32, 28, 28, 128] before: [1, 32, 28, 28, 128]
+('3 net', TensorShape([Dimension(1), Dimension(32), Dimension(28), Dimension(28), Dimension(128)]))
+im/conv4_1_short -> [1, 16, 14, 14, 256] before: [1, 32, 28, 28, 128]
+im/conv4_1_1 -> [1, 16, 14, 14, 256] before: [1, 32, 28, 28, 128]
+im/conv4_1_2 -> [1, 16, 14, 14, 256] before: [1, 16, 14, 14, 256]
+('4 net', TensorShape([Dimension(1), Dimension(16), Dimension(14), Dimension(14), Dimension(256)]))
+im/conv4_2_1 -> [1, 16, 14, 14, 256] before: [1, 16, 14, 14, 256]
+im/conv4_2_2 -> [1, 16, 14, 14, 256] before: [1, 16, 14, 14, 256]
+('5 net', TensorShape([Dimension(1), Dimension(16), Dimension(14), Dimension(14), Dimension(256)]))
+time_stride = 1
+im/conv5_1_short -> [1, 16, 7, 7, 512] before: [1, 16, 14, 14, 256]
+im/conv5_1_1 -> [1, 16, 7, 7, 512] before: [1, 16, 14, 14, 256]
+im/conv5_1_2 -> [1, 16, 7, 7, 512] before: [1, 16, 7, 7, 512]
+('6 net', TensorShape([Dimension(1), Dimension(16), Dimension(7), Dimension(7), Dimension(512)]))
+im/conv5_2_1 -> [1, 16, 7, 7, 512] before: [1, 16, 7, 7, 512]
+im/conv5_2_2 -> [1, 16, 7, 7, 512] before: [1, 16, 7, 7, 512]
+('7 net', TensorShape([Dimension(1), Dimension(16), Dimension(7), Dimension(7), Dimension(512)]))
+('4 net', TensorShape([Dimension(1), Dimension(1), Dimension(1), Dimension(1), Dimension(512)]))
+joint/logits -> [1, 1, 1, 1, 1] before: [1, 1, 1, 1, 512]
+('logits', TensorShape([Dimension(1), Dimension(1)]))
+joint/logits -> [1, 16, 7, 7, 1] before: [1, 16, 7, 7, 512]
+('cam', TensorShape([Dimension(1), Dimension(16), Dimension(7), Dimension(7), Dimension(1)]))
+(1, 16, 7, 7, 1)

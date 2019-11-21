@@ -34,12 +34,13 @@ class residual_block(nn.Module):
         if(in_feats!=out_feats and stride!=[1,1,1]):
             self.downsample_conv = 2
             self.downsample_layer = nn.Conv3d(in_channels=in_feats,out_channels=out_feats,kernel_size=[1,1,1],stride=stride)
+            self.bn3 = nn.BatchNorm3d(out_feats)
     def forward(self,x):
         identity = x
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.conv2(out)
         # if(self.downsample_conv==1):
-        identity = self.downsample_layer(identity)
+        identity = self.bn3(self.downsample_layer(identity))
         out = out + identity
         out = self.bn2(out)
         out = self.relu(out)
@@ -50,6 +51,7 @@ class AVNet(nn.Module):
         super(AVNet, self).__init__()
         # fusion layers
         self.f_conv1 = nn.Conv3d(in_channels=192,out_channels=512,kernel_size=[1,1,1])
+        self.bn_f1 = nn.BatchNorm3d(512)
         self.f_conv2 = nn.Conv3d(in_channels=512,out_channels=128,kernel_size=[1,1,1])
         self.bn_f = nn.BatchNorm3d(128)
         self.relu_f = nn.ReLU(inplace=True)
@@ -80,7 +82,7 @@ class AVNet(nn.Module):
         # print(combined.shape)
         short = torch.cat([combined[:,:64,:,:,:],combined[:,-64:,:,:,:]],1)
         # print(short.shape)
-        combined = F.relu(self.f_conv1(combined))
+        combined = F.relu(self.bn_f1(self.f_conv1(combined)))
         # print(combined.shape)
         combined = self.f_conv2(combined)
         # print(combined.shape)
