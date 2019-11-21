@@ -22,6 +22,7 @@ import os
 import tensorflow as tf
 from pprint import pprint
 import copy
+
 class residual_block(nn.Module):
     def __init__(self,in_feats,out_feats,kernel,padding,stride=1):
         super(residual_block,self).__init__()
@@ -224,7 +225,8 @@ for i in avkeys:
 # akeys, ashapes, vkeys, vshapes are in sync
 
 tf_path = os.path.abspath('/home/ritesh/Desktop/multisensory/results/nets/shift/net.tf-650000')  # Path to our TensorFlow checkpoint
-tf_vars = tf.train.list_variables(tf_path)
+tf_vars = tf.train.list_variables(tf_path)[1:]
+
 
 # pprint(tf_vars)
 # print(tf_vars)
@@ -400,14 +402,50 @@ avmapper = {
 }
 
 # now we need to transfer weights
-# print(adict)
-# for adict 
-a1dict = copy.deepcopy(adict)
+# print(vdict)
+# for vdict 
+
+a1dict = copy.deepcopy(vdict)
+# print()
+for i in vdict.keys():
+    print(i)
+print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+
+def conva(s):
+    # s is a string and we need to check if its a conv type
+    a = (s.find('conv') >= 0)
+    b = (s.find('weight') >= 0)
+    return a and b
+
+def bnw(s):
+    # s is a string and we need to check if its a batchnorm weight type
+    a = (s.find('bn') >= 0)
+    b = (s.find('weight') >= 0)
+    return a and b
 
 for i in vmapper.keys():
     print(i)
+    tfv = torch.Tensor(tf.train.load_variable(tf_path, vmapper[i]))
     if(conva(i)):
-        a1dict[i] = vmapper[i]
-    # if i has 
-for j in a1dict.keys():
-    print(j)
+        tvar = tfv.permute(4,3,0,1,2)
+        print('in conv loop ', tvar.shape, a1dict[i].shape)
+        if(tvar.shape == a1dict[i].shape):
+            a1dict[i] = tvar
+        else:
+            print(i,'wrong ...........................')
+            flahs()
+        # if i has 
+    else:
+        if(tfv.shape == a1dict[i].shape):
+            a1dict[i] = tfv
+        else:
+            print(i,'wrong ...........................')
+            flash()
+
+for i in a1dict.keys():
+    if(bnw(i)):
+        ptv = a1dict[i]
+        print(ptv.shape)
+        a = torch.ones_like(ptv)
+        a1dict[i] = a
+torch.save(a1dict,'tfvmodel.pt')
