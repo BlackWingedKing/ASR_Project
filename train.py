@@ -71,18 +71,19 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
             optimiser.step()
             trainloss+=loss.item()
 #             print('completed', i,'th', 'iteration')
+        trainloss = trainloss*batch_size
         trainloss/=len(train_loader)
         valoss = val(vmodel, amodel, avmodel, val_loader)
         loss_list.append(trainloss)
         val_list.append(valoss)
 
         print('epoch: ', e, 'iteration: ', it, 'train loss: ', trainloss, 'val loss: ', valoss)
-        if(prev_loss >= trainloss):
+        if(prev_loss >= valloss):
              print('saving the model ')
              torch.save(amodel.state_dict(), 'amodel.pt')
              torch.save(vmodel.state_dict(), 'vmodel.pt')
              torch.save(avmodel.state_dict(), 'avmodel.pt')
-             prev_loss = trainloss
+             prev_loss = valloss
              print('model saved')
     dicty = {'train_loss': loss_list, 'val loss': val_list}
     dft = pd.DataFrame(dicty)
@@ -108,7 +109,7 @@ def val(vmodel, amodel, avmodel, val_loader):
             # loss = torch.mean(torch.log(p) + torch.log(1-ps))
             loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
             avgloss+= loss.item()
-        return avgloss
+        return avgloss*test_batch_size/len(val_loader)
 
 
 def main():
