@@ -34,13 +34,14 @@ class residual_block(nn.Module):
         if(in_feats!=out_feats and stride!=[1,1,1]):
             self.downsample_conv = 2
             self.downsample_layer = nn.Conv3d(in_channels=in_feats,out_channels=out_feats,kernel_size=[1,1,1],stride=stride,bias=False)
-            self.bn3 = nn.BatchNorm3d(out_feats)
+        self.bn3 = nn.BatchNorm3d(out_feats)
     def forward(self,x):
         identity = x
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.conv2(out)
-        # if(self.downsample_conv==1):
-        identity = self.bn3(self.downsample_layer(identity))
+        if(self.downsample_conv==1):
+            identity = self.bn3(self.downsample_layer(identity))
+        else:identity = self.downsample_layer(identity)
         out = out + identity
         out = self.bn2(out)
         out = self.relu(out)
