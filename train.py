@@ -21,12 +21,13 @@ import time
 from model_fused import AVNet, VideoNet, AudioNet
 from data_loader import AVDataset, Resize, RandomCrop
 import utils
+from tqdm import tqdm
 
 # parameters and hyper params
-batch_size = 1
+batch_size = 3
 test_batch_size = 2
 nepochs = 100
-LR = 0.001
+LR = 0.01
 
 #gpu settings
 use_cuda = torch.cuda.is_available()
@@ -50,37 +51,39 @@ def train(vmodel, amodel, avmodel, optimiser, epochs, train_loader, val_loader):
         avmodel.train()
         trainloss = 0.0
         i = 0
-        for batch_id, (vid, aus, au) in enumerate(train_loader):
+        for batch_id, (vid, aus, au) in enumerate(tqdm(train_loader)):
             i+=1
-            print('in the iteration loop')
-            print(vid.shape, aus.shape, au.shape)
+            optimiser.zero_grad()
+#             print('in the iteration loop')
+#             print(vid.shape, aus.shape, au.shape)
             vid = vid.to(device)
-            aus1 = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
-            au1 = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            aus1 = aus.unsqueeze(3).unsqueeze(4).to(device)
+            au1 = au.unsqueeze(3).unsqueeze(4).to(device)
             vfeat = vmodel(vid)
             afeat = amodel(au1)
             asfeat = amodel(aus1)
             p, _ = avmodel(vfeat, afeat)
             ps, _ = avmodel(vfeat, asfeat)
             gt = torch.ones_like(p).to(device)
-            # loss = -1*torch.mean(torch.log(p) + torch.log(1-ps))
-            loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
+            loss = -1*torch.mean(torch.log(p) + torch.log(1-ps))
+#             loss = torch.mean(bce_loss(p,gt) + bce_loss((1-ps),gt))
             loss.backward()
+            optimiser.step()
             trainloss+=loss.item()
-            print('completed', i,'th', 'iteration')
+#             print('completed', i,'th', 'iteration')
         trainloss/=len(train_loader)
         valoss = val(vmodel, amodel, avmodel, val_loader)
         loss_list.append(trainloss)
         val_list.append(valoss)
 
         print('epoch: ', e, 'iteration: ', it, 'train loss: ', trainloss, 'val loss: ', valoss)
-        # if(prev_loss >= trainloss):
-        #     print('saving the model ')
-        #     torch.save(amodel.state_dict(), 'amodel.pt')
-        #     torch.save(vmodel.state_dict(), 'vmodel.pt')
-        #     torch.save(avmodel.state_dict(), 'avmodel.pt')
-        #     prev_loss = trainloss
-        #     print('model saved')
+        if(prev_loss >= trainloss):
+             print('saving the model ')
+             torch.save(amodel.state_dict(), 'amodel.pt')
+             torch.save(vmodel.state_dict(), 'vmodel.pt')
+             torch.save(avmodel.state_dict(), 'avmodel.pt')
+             prev_loss = trainloss
+             print('model saved')
     dicty = {'train_loss': loss_list, 'val loss': val_list}
     dft = pd.DataFrame(dicty)
     dft.to_hdf('log.h5', key='data')
@@ -91,10 +94,11 @@ def val(vmodel, amodel, avmodel, val_loader):
     avmodel.eval()
     avgloss = 0.0
     with torch.no_grad():
-        for batch_id, (vid, aus, au) in enumerate(val_loader):
+        print("Validation:")
+        for batch_id, (vid, aus, au) in enumerate(tqdm(val_loader)):
             vid = vid.to(device)
-            aus = aus[0:87588].unsqueeze(3).unsqueeze(4).to(device)
-            au = au[0:87588].unsqueeze(3).unsqueeze(4).to(device)
+            aus = aus.unsqueeze(3).unsqueeze(4).to(device)
+            au = au.unsqueeze(3).unsqueeze(4).to(device)
             vfeat = vmodel(vid)
             afeat = amodel(au)
             asfeat = amodel(aus)
@@ -123,8 +127,8 @@ def main():
     # train_list = utils.read_list('data/train_list.txt')
     # val_list = utils.read_list('data/val_list.txt')
     composed = transforms.Compose([Resize(256), RandomCrop(224)])
-    train_loader = torch.utils.data.DataLoader(AVDataset(train_list, transform=composed), batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = torch.utils.data.DataLoader(AVDataset(val_list, transform=composed), batch_size=test_batch_size,shuffle=True, num_workers=4)
+    train_loader = torch.utils.data.DataLoader(AVDataset(train_list, transform=composed), batch_size=batch_size, shuffle=True, num_workers=6)
+    val_loader = torch.utils.data.DataLoader(AVDataset(val_list, transform=composed), batch_size=test_batch_size,shuffle=True, num_workers=6)
 
     train(vmodel, amodel, avmodel, optimiser, nepochs, train_loader, val_loader)
 
