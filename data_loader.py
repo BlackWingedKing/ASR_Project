@@ -7,6 +7,7 @@ import os
 # from skimage import io
 import skimage
 import skvideo.io
+
 class AVDataset(Dataset):
     def __init__(self, train_list, path='data/train/', transform=None):
         self.path = path
@@ -29,15 +30,15 @@ class AVDataset(Dataset):
         # normalising video to -1 and 1
         vid = (2./255)*vid.double() - 1
         # normalising audio
-        aud_shifted = normalize_sfs(aud_shifted)
-        aud_unshifted = normalize_sfs(aud_unshifted)
+#         aud_shifted = normalize_sfs(aud_shifted)
+#         aud_unshifted = normalize_sfs(aud_unshifted)
 
         # (B, C, T, H, W)
         if self.transform is not None:
             vid = self.transform(vid)
 
         vid = vid.permute(3,0,1,2) # since skvideo reads (T,H,W,C) and our model needs
-        return (vid, aud_shifted[:,:87588], aud_unshifted[:,:87588])
+        return (vid, aud_shifted, aud_unshifted)
 
     def __len__(self):
         return len(self.list)  # number of videos
